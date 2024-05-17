@@ -7,7 +7,7 @@
 #define MAX_DOCTOR_REMARK 200
 #define MAX_PASSWORD_LENGTH 50
 #define MAX_USER_NAME 30
-#define MAX_PATIENTS 2
+#define MAX_PATIENTS 100
 #define BLOOD_CHAR_MAX 5
 
 typedef struct patientInfo
@@ -26,41 +26,58 @@ typedef struct patientInfo
     char bloodType[BLOOD_CHAR_MAX];
 } patientInfo;
 
+void getPatientInfo(patientInfo *patient)
+{
+    printf("Input name: ");
+    fgets(patient->patientName, sizeof(patient->patientName), stdin);
+    strtok(patient->patientName, "\n");
+
+    printf("Input age: ");
+    scanf("%d", &patient->age);
+    getchar();
+
+    printf("Input height (in centimeters): ");
+    scanf("%f", &patient->height);
+    getchar();
+
+    printf("Input weight (in kilograms): ");
+    scanf("%f", &patient->weight);
+    getchar();
+
+    printf("Input blood group: ");
+    fgets(patient->bloodType, sizeof(patient->bloodType), stdin);
+    strtok(patient->bloodType, "\n");
+
+    printf("Input patient contact number: ");
+    scanf("%lu", &patient->patientContact);
+    getchar();
+
+    printf("Input address: ");
+    fgets(patient->patientAddress, sizeof(patient->patientAddress), stdin);
+    strtok(patient->patientAddress, "\n");
+
+    printf("Input emergency contact number: ");
+    scanf("%lu", &patient->emergencyContact);
+    getchar();
+}
+
 void getInfo_patient(patientInfo patients[MAX_PATIENTS])
 {
-    for(int i = 0; i < MAX_PATIENTS; i++)
+    int numPatients;
+    printf("How many patients do you want to add (maximum %d)? ", MAX_PATIENTS);
+    scanf("%d", &numPatients);
+    getchar();  // Consume newline character left by scanf
+
+    if (numPatients > MAX_PATIENTS)
     {
-        printf("Input name: ");
-        fgets(patients[i].patientName, sizeof(patients[i].patientName), stdin);
-        strtok(patients[i].patientName, "\n");
+        printf("You can add a maximum of %d patients.\n", MAX_PATIENTS);
+        numPatients = MAX_PATIENTS;
+    }
 
-        printf("Input age: ");
-        scanf("%d", &patients[i].age);
-        getchar();
-
-        printf("Input height (in centimeters): ");
-        scanf("%f", &patients[i].height);
-        getchar();
-
-        printf("Input weight (in kilograms): ");
-        scanf("%f", &patients[i].weight);
-        getchar();
-
-        printf("Input blood group: ");
-        fgets(patients[i].bloodType, sizeof(patients[i].bloodType), stdin);
-        strtok(patients[i].bloodType, "\n");
-
-        printf("Input patient contact number: ");
-        scanf("%lu", &patients[i].patientContact);
-        getchar();
-
-        printf("Input address: ");
-        fgets(patients[i].patientAddress, sizeof(patients[i].patientAddress), stdin);
-        strtok(patients[i].patientAddress, "\n");
-
-        printf("Input emergency contact number: ");
-        scanf("%lu", &patients[i].emergencyContact);
-        getchar();
+    for (int i = 0; i < numPatients; i++)
+    {
+        printf("Input details for patient %d:\n", i + 1);
+        getPatientInfo(&patients[i]);
     }
 }
 
@@ -106,13 +123,26 @@ void displayPatient(const patientInfo* patient)
     printf("Emergency Contact Number: %lu\n", patient->emergencyContact);
 }
 
+void addPatient(patientInfo patients[MAX_PATIENTS])
+{
+    for (int i = 0; i < MAX_PATIENTS; i++)
+    {
+        if (strlen(patients[i].patientName) == 0)
+        {
+            printf("Adding new patient:\n");
+            getPatientInfo(&patients[i]);
+            printf("Patient '%s' added successfully.\n", patients[i].patientName);
+            return;
+        }
+    }
+    printf("Cannot add patient: Maximum number of patients reached.\n");
+}
+
 int main()
 {
     patientInfo patients[MAX_PATIENTS] = {0};
 
     getInfo_patient(patients);
-
-    printf("First patient's name: %s\n", patients[0].patientName);
 
     char searchName[MAX_NAME_LENGTH];
     printf("Enter the name of the patient to search: ");
@@ -136,6 +166,8 @@ int main()
     strtok(deleteName, "\n");
 
     deletePatient(patients, deleteName);
+
+    addPatient(patients);
 
     return 0;
 }
