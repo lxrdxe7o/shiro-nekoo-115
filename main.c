@@ -9,6 +9,7 @@
 #define MAX_USER_NAME 30
 #define MAX_PATIENTS 100
 #define BLOOD_CHAR_MAX 5
+#define MAX_CONTACT_LENGTH 15
 
 typedef struct patientInfo
 {
@@ -20,8 +21,8 @@ typedef struct patientInfo
     int id;
     float height;
     float weight;
-    unsigned long int patientContact;
-    unsigned long int emergencyContact;
+    char patientContact[MAX_CONTACT_LENGTH];
+    char emergencyContact[MAX_CONTACT_LENGTH];
     char patientUserName[MAX_USER_NAME];
     char bloodType[BLOOD_CHAR_MAX];
 } patientInfo;
@@ -49,16 +50,16 @@ void getPatientInfo(patientInfo *patient)
     strtok(patient->bloodType, "\n");
 
     printf("Input patient contact number: ");
-    scanf("%lu", &patient->patientContact);
-    getchar();
+    fgets(patient->patientContact, sizeof(patient->patientContact), stdin);
+    strtok(patient->patientContact, "\n");
 
     printf("Input address: ");
     fgets(patient->patientAddress, sizeof(patient->patientAddress), stdin);
     strtok(patient->patientAddress, "\n");
 
     printf("Input emergency contact number: ");
-    scanf("%lu", &patient->emergencyContact);
-    getchar();
+    fgets(patient->emergencyContact, sizeof(patient->emergencyContact), stdin);
+    strtok(patient->emergencyContact, "\n");
 }
 
 void getInfo_patient(patientInfo patients[MAX_PATIENTS])
@@ -76,7 +77,7 @@ void getInfo_patient(patientInfo patients[MAX_PATIENTS])
 
     for (int i = 0; i < numPatients; i++)
     {
-        printf("Input details for patient %d:\n", i + 1);
+        printf("\nInput details for patient %d:\n", i + 1);
         getPatientInfo(&patients[i]);
     }
 }
@@ -113,14 +114,19 @@ void deletePatient(patientInfo patients[MAX_PATIENTS], const char* name)
 
 void displayPatient(const patientInfo* patient)
 {
-    printf("Name: %s\n", patient->patientName);
-    printf("Age: %d\n", patient->age);
-    printf("Height: %.2f cm\n", patient->height);
-    printf("Weight: %.2f kg\n", patient->weight);
-    printf("Blood Type: %s\n", patient->bloodType);
-    printf("Contact Number: %lu\n", patient->patientContact);
-    printf("Address: %s\n", patient->patientAddress);
-    printf("Emergency Contact Number: %lu\n", patient->emergencyContact);
+    printf("\n╔═══════════════════════════════════╗\n");
+    printf("║        Patient Information        ║\n");
+    printf("╚═══════════════════════════════════╝\n");
+    printf("╔═══════════════════════════════════╗\n");
+    printf("║ Name: %-27s ║\n", patient->patientName);
+    printf("║ Age: %-28d ║\n", patient->age);
+    printf("║ Height: %-25.2f ║\n", patient->height);
+    printf("║ Weight: %-25.2f ║\n", patient->weight);
+    printf("║ Blood Type: %-22s║\n", patient->bloodType);
+    printf("║ Contact Number: %-18s║\n", patient->patientContact);
+    printf("║ Address: %-25s║\n", patient->patientAddress);
+    printf("║ Emergency Contact: %-15s║\n", patient->emergencyContact);
+    printf("╚═══════════════════════════════════╝\n");
 }
 
 void addPatient(patientInfo patients[MAX_PATIENTS])
@@ -138,36 +144,90 @@ void addPatient(patientInfo patients[MAX_PATIENTS])
     printf("Cannot add patient: Maximum number of patients reached.\n");
 }
 
+void displayMenu()
+{
+    printf("\n╔═══════════════════════════════════╗\n");
+    printf("║           Patient System          ║\n");
+    printf("╠═══════════════════════════════════╣\n");
+    printf("║ 1. Add patients                   ║\n");
+    printf("║ 2. Search patient                 ║\n");
+    printf("║ 3. Delete patient                 ║\n");
+    printf("║ 4. Display patient information    ║\n");
+    printf("║ 5. Exit                           ║\n");
+    printf("╚═══════════════════════════════════╝\n");
+    printf("Enter your choice: ");
+}
+
 int main()
 {
     patientInfo patients[MAX_PATIENTS] = {0};
+    int choice;
 
-    getInfo_patient(patients);
-
-    char searchName[MAX_NAME_LENGTH];
-    printf("Enter the name of the patient to search: ");
-    fgets(searchName, sizeof(searchName), stdin);
-    strtok(searchName, "\n");
-
-    int index = searchPatient(patients, searchName);
-    if (index != -1)
+    while (1)
     {
-        printf("Patient found:\n");
-        displayPatient(&patients[index]);
+        displayMenu();
+        scanf("%d", &choice);
+        getchar();  // Consume newline character left by scanf
+
+        switch (choice)
+        {
+            case 1:
+                getInfo_patient(patients);
+                break;
+            case 2:
+            {
+                char searchName[MAX_NAME_LENGTH];
+                printf("Enter the name of the patient to search: ");
+                fgets(searchName, sizeof(searchName), stdin);
+                strtok(searchName, "\n");
+
+                int index = searchPatient(patients, searchName);
+                if (index != -1)
+                {
+                    printf("Patient found:\n");
+                    displayPatient(&patients[index]);
+                }
+                else
+                {
+                    printf("Patient not found.\n");
+                }
+                break;
+            }
+            case 3:
+            {
+                char deleteName[MAX_NAME_LENGTH];
+                printf("Enter the name of the patient to delete: ");
+                fgets(deleteName, sizeof(deleteName), stdin);
+                strtok(deleteName, "\n");
+
+                deletePatient(patients, deleteName);
+                break;
+            }
+            case 4:
+            {
+                char displayName[MAX_NAME_LENGTH];
+                printf("Enter the name of the patient to display: ");
+                fgets(displayName, sizeof(displayName), stdin);
+                strtok(displayName, "\n");
+
+                int index = searchPatient(patients, displayName);
+                if (index != -1)
+                {
+                    displayPatient(&patients[index]);
+                }
+                else
+                {
+                    printf("Patient not found.\n");
+                }
+                break;
+            }
+            case 5:
+                printf("Exiting program...\n");
+                exit(0);
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
     }
-    else
-    {
-        printf("Patient not found.\n");
-    }
-
-    char deleteName[MAX_NAME_LENGTH];
-    printf("Enter the name of the patient to delete: ");
-    fgets(deleteName, sizeof(deleteName), stdin);
-    strtok(deleteName, "\n");
-
-    deletePatient(patients, deleteName);
-
-    addPatient(patients);
 
     return 0;
 }
