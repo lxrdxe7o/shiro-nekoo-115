@@ -62,7 +62,22 @@ void getPatientInfo(patientInfo *patient)
     strtok(patient->emergencyContact, "\n");
 }
 
-void getInfo_patient(patientInfo patients[MAX_PATIENTS])
+void patientAccountCreation(patientInfo *patient, int *lastAssignedID)
+{
+    patient->id = ++(*lastAssignedID); // Assign a unique ID by incrementing the last assigned ID
+
+    printf("Assigned unique ID: %d\n", patient->id);
+
+    printf("Input patient username: ");
+    fgets(patient->patientUserName, sizeof(patient->patientUserName), stdin);
+    strtok(patient->patientUserName, "\n");
+
+    printf("Input patient password: ");
+    fgets(patient->patientPass, sizeof(patient->patientPass), stdin);
+    strtok(patient->patientPass, "\n");
+}
+
+void getInfo_patient(patientInfo patients[MAX_PATIENTS], int *lastAssignedID)
 {
     int numPatients;
     printf("How many patients do you want to add (maximum %d)? ", MAX_PATIENTS);
@@ -79,6 +94,7 @@ void getInfo_patient(patientInfo patients[MAX_PATIENTS])
     {
         printf("\nInput details for patient %d:\n", i + 1);
         getPatientInfo(&patients[i]);
+        patientAccountCreation(&patients[i], lastAssignedID);
     }
 }
 
@@ -126,22 +142,10 @@ void displayPatient(const patientInfo* patient)
     printf("║ Contact Number: %-18s║\n", patient->patientContact);
     printf("║ Address: %-25s║\n", patient->patientAddress);
     printf("║ Emergency Contact: %-15s║\n", patient->emergencyContact);
+    printf("║ Username: %-23s ║\n", patient->patientUserName);
+    printf("║ Password: %-23s ║\n", patient->patientPass);
+    printf("║ ID: %-29d ║\n", patient->id);
     printf("╚═══════════════════════════════════╝\n");
-}
-
-void addPatient(patientInfo patients[MAX_PATIENTS])
-{
-    for (int i = 0; i < MAX_PATIENTS; i++)
-    {
-        if (strlen(patients[i].patientName) == 0)
-        {
-            printf("Adding new patient:\n");
-            getPatientInfo(&patients[i]);
-            printf("Patient '%s' added successfully.\n", patients[i].patientName);
-            return;
-        }
-    }
-    printf("Cannot add patient: Maximum number of patients reached.\n");
 }
 
 void displayMenu()
@@ -160,6 +164,7 @@ void displayMenu()
 
 int main()
 {
+    static int lastAssignedID = 0;  // Static variable to keep track of the last assigned ID
     patientInfo patients[MAX_PATIENTS] = {0};
     int choice;
 
@@ -172,7 +177,7 @@ int main()
         switch (choice)
         {
             case 1:
-                getInfo_patient(patients);
+                getInfo_patient(patients, &lastAssignedID);
                 break;
             case 2:
             {
