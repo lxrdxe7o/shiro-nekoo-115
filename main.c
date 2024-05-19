@@ -49,6 +49,191 @@ typedef struct doctorInfo
     char doctorUserName[MAX_USER_NAME];
 } doctorInfo;
 
+void getPatientInfo(patientInfo *patient);
+void getInfo_patient(patientInfo patients[MAX_PATIENTS], int *lastAssignedID);
+void patientAccountCreation(patientInfo *patient, int *lastAssignedID);
+int searchPatient(patientInfo patients[MAX_PATIENTS], const char* name);
+void deletePatient(patientInfo patients[MAX_PATIENTS], const char* name);
+void displayPatient(const patientInfo* patient);
+
+void getDoctorInfo(doctorInfo *doctor);
+void doctorAccountCreation(doctorInfo *doctor, int *lastAssignedID);
+void getInfo_doctor(doctorInfo doctors[MAX_DOCTORS], int *lastAssignedID);
+int searchDoctor(doctorInfo doctors[MAX_DOCTORS], const char* name);
+void deleteDoctor(doctorInfo doctors[MAX_DOCTORS], const char* name);
+void displayDoctor(const doctorInfo* doctor);
+
+void displayPatientMenu();
+void displayDoctorMenu();
+void displayMainMenu();
+
+int main()
+{
+    static int lastAssignedPatientID = 0;
+    static int lastAssignedDoctorID = 0;
+    patientInfo patients[MAX_PATIENTS] = {0};
+    doctorInfo doctors[MAX_DOCTORS] = {0};
+    int choice;
+
+    while (1)
+    {
+        displayMainMenu();
+        scanf("%d", &choice);
+        getchar();
+
+        switch (choice)
+        {
+            case 1:
+            {
+                int patientChoice;
+                while (1)
+                {
+                    displayPatientMenu();
+                    scanf("%d", &patientChoice);
+                    getchar();
+
+                    switch (patientChoice)
+                    {
+                        case 1:
+                            getInfo_patient(patients, &lastAssignedPatientID);
+                            break;
+                        case 2:
+                        {
+                            char searchName[MAX_NAME_LENGTH];
+                            printf("Enter the name of the patient to search: ");
+                            fgets(searchName, sizeof(searchName), stdin);
+                            strtok(searchName, "\n");
+
+                            int index = searchPatient(patients, searchName);
+                            if (index != -1)
+                            {
+                                printf("Patient found:\n");
+                                displayPatient(&patients[index]);
+                            }
+                            else
+                            {
+                                printf("Patient not found.\n");
+                            }
+                            break;
+                        }
+                        case 3:
+                        {
+                            char deleteName[MAX_NAME_LENGTH];
+                            printf("Enter the name of the patient to delete: ");
+                            fgets(deleteName, sizeof(deleteName), stdin);
+                            strtok(deleteName, "\n");
+
+                            deletePatient(patients, deleteName);
+                            break;
+                        }
+                        case 4:
+                        {
+                            char displayName[MAX_NAME_LENGTH];
+                            printf("Enter the name of the patient to display: ");
+                            fgets(displayName, sizeof(displayName), stdin);
+                            strtok(displayName, "\n");
+
+                            int index = searchPatient(patients, displayName);
+                            if (index != -1)
+                            {
+                                displayPatient(&patients[index]);
+                            }
+                            else
+                            {
+                                printf("Patient not found.\n");
+                            }
+                            break;
+                        }
+                        case 5:
+                            goto mainMenu;
+                        default:
+                            printf("Invalid choice. Please try again.\n");
+                    }
+                }
+                break;
+            }
+            case 2:
+            {
+                int doctorChoice;
+                while (1)
+                {
+                    displayDoctorMenu();
+                    scanf("%d", &doctorChoice);
+                    getchar();
+
+                    switch (doctorChoice)
+                    {
+                        case 1:
+                            getInfo_doctor(doctors, &lastAssignedDoctorID);
+                            break;
+                        case 2:
+                        {
+                            char searchName[MAX_NAME_LENGTH];
+                            printf("Enter the name of the doctor to search: ");
+                            fgets(searchName, sizeof(searchName), stdin);
+                            strtok(searchName, "\n");
+
+                            int index = searchDoctor(doctors, searchName);
+                            if (index != -1)
+                            {
+                                printf("Doctor found:\n");
+                                displayDoctor(&doctors[index]);
+                            }
+                            else
+                            {
+                                printf("Doctor not found.\n");
+                            }
+                            break;
+                        }
+                        case 3:
+                        {
+                            char deleteName[MAX_NAME_LENGTH];
+                            printf("Enter the name of the doctor to delete: ");
+                            fgets(deleteName, sizeof(deleteName), stdin);
+                            strtok(deleteName, "\n");
+
+                            deleteDoctor(doctors, deleteName);
+                            break;
+                        }
+                        case 4:
+                        {
+                            char displayName[MAX_NAME_LENGTH];
+                            printf("Enter the name of the doctor to display: ");
+                            fgets(displayName, sizeof(displayName), stdin);
+                            strtok(displayName, "\n");
+
+                            int index = searchDoctor(doctors, displayName);
+                            if (index != -1)
+                            {
+                                displayDoctor(&doctors[index]);
+                            }
+                            else
+                            {
+                                printf("Doctor not found.\n");
+                            }
+                            break;
+                        }
+                        case 5:
+                            goto mainMenu;
+                        default:
+                            printf("Invalid choice. Please try again.\n");
+                    }
+                }
+                break;
+            }
+            case 3:
+                printf("Exiting the program.\n");
+                exit(0);
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+        mainMenu:;
+    }
+
+    return 0;
+}
+
+
 void getPatientInfo(patientInfo *patient)
 {
     printf("Input name: ");
@@ -83,6 +268,7 @@ void getPatientInfo(patientInfo *patient)
     fgets(patient->emergencyContact, sizeof(patient->emergencyContact), stdin);
     strtok(patient->emergencyContact, "\n");
 }
+
 
 void patientAccountCreation(patientInfo *patient, int *lastAssignedID)
 {
@@ -314,170 +500,4 @@ void displayMainMenu()
     printf("%s║ %s3.%s Exit                                ║%s\n", BLUE, GREEN, BLUE, RESET);
     printf("%s╚════════════════════════════════════════╝%s\n", BLUE, RESET);
     printf("Enter your choice: ");
-}
-
-int main()
-{
-    static int lastAssignedPatientID = 0;
-    static int lastAssignedDoctorID = 0;
-    patientInfo patients[MAX_PATIENTS] = {0};
-    doctorInfo doctors[MAX_DOCTORS] = {0};
-    int choice;
-
-    while (1)
-    {
-        displayMainMenu();
-        scanf("%d", &choice);
-        getchar();
-
-        switch (choice)
-        {
-            case 1:
-            {
-                int patientChoice;
-                while (1)
-                {
-                    displayPatientMenu();
-                    scanf("%d", &patientChoice);
-                    getchar();
-
-                    switch (patientChoice)
-                    {
-                        case 1:
-                            getInfo_patient(patients, &lastAssignedPatientID);
-                            break;
-                        case 2:
-                        {
-                            char searchName[MAX_NAME_LENGTH];
-                            printf("Enter the name of the patient to search: ");
-                            fgets(searchName, sizeof(searchName), stdin);
-                            strtok(searchName, "\n");
-
-                            int index = searchPatient(patients, searchName);
-                            if (index != -1)
-                            {
-                                printf("Patient found:\n");
-                                displayPatient(&patients[index]);
-                            }
-                            else
-                            {
-                                printf("Patient not found.\n");
-                            }
-                            break;
-                        }
-                        case 3:
-                        {
-                            char deleteName[MAX_NAME_LENGTH];
-                            printf("Enter the name of the patient to delete: ");
-                            fgets(deleteName, sizeof(deleteName), stdin);
-                            strtok(deleteName, "\n");
-
-                            deletePatient(patients, deleteName);
-                            break;
-                        }
-                        case 4:
-                        {
-                            char displayName[MAX_NAME_LENGTH];
-                            printf("Enter the name of the patient to display: ");
-                            fgets(displayName, sizeof(displayName), stdin);
-                            strtok(displayName, "\n");
-
-                            int index = searchPatient(patients, displayName);
-                            if (index != -1)
-                            {
-                                displayPatient(&patients[index]);
-                            }
-                            else
-                            {
-                                printf("Patient not found.\n");
-                            }
-                            break;
-                        }
-                        case 5:
-                            goto mainMenu;
-                        default:
-                            printf("Invalid choice. Please try again.\n");
-                    }
-                }
-                break;
-            }
-            case 2:
-            {
-                int doctorChoice;
-                while (1)
-                {
-                    displayDoctorMenu();
-                    scanf("%d", &doctorChoice);
-                    getchar();
-
-                    switch (doctorChoice)
-                    {
-                        case 1:
-                            getInfo_doctor(doctors, &lastAssignedDoctorID);
-                            break;
-                        case 2:
-                        {
-                            char searchName[MAX_NAME_LENGTH];
-                            printf("Enter the name of the doctor to search: ");
-                            fgets(searchName, sizeof(searchName), stdin);
-                            strtok(searchName, "\n");
-
-                            int index = searchDoctor(doctors, searchName);
-                            if (index != -1)
-                            {
-                                printf("Doctor found:\n");
-                                displayDoctor(&doctors[index]);
-                            }
-                            else
-                            {
-                                printf("Doctor not found.\n");
-                            }
-                            break;
-                        }
-                        case 3:
-                        {
-                            char deleteName[MAX_NAME_LENGTH];
-                            printf("Enter the name of the doctor to delete: ");
-                            fgets(deleteName, sizeof(deleteName), stdin);
-                            strtok(deleteName, "\n");
-
-                            deleteDoctor(doctors, deleteName);
-                            break;
-                        }
-                        case 4:
-                        {
-                            char displayName[MAX_NAME_LENGTH];
-                            printf("Enter the name of the doctor to display: ");
-                            fgets(displayName, sizeof(displayName), stdin);
-                            strtok(displayName, "\n");
-
-                            int index = searchDoctor(doctors, displayName);
-                            if (index != -1)
-                            {
-                                displayDoctor(&doctors[index]);
-                            }
-                            else
-                            {
-                                printf("Doctor not found.\n");
-                            }
-                            break;
-                        }
-                        case 5:
-                            goto mainMenu;
-                        default:
-                            printf("Invalid choice. Please try again.\n");
-                    }
-                }
-                break;
-            }
-            case 3:
-                printf("Exiting the program.\n");
-                exit(0);
-            default:
-                printf("Invalid choice. Please try again.\n");
-        }
-        mainMenu:;
-    }
-
-    return 0;
 }
