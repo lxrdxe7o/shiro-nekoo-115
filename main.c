@@ -49,6 +49,8 @@ typedef struct doctorInfo
     char doctorUserName[MAX_USER_NAME];
 } doctorInfo;
 
+void clear_terminal();
+
 void getPatientInfo(patientInfo *patient);
 void getInfo_patient(patientInfo patients[MAX_PATIENTS], int *lastAssignedID);
 void patientAccountCreation(patientInfo *patient, int *lastAssignedID);
@@ -66,6 +68,8 @@ void displayDoctor(const doctorInfo* doctor);
 void displayPatientMenu();
 void displayDoctorMenu();
 void displayMainMenu();
+
+void nextPage();
 
 int main()
 {
@@ -107,8 +111,10 @@ int main()
                             int index = searchPatient(patients, searchName);
                             if (index != -1)
                             {
+                                clear_terminal();
                                 printf("Patient found:\n");
                                 displayPatient(&patients[index]);
+                                nextPage();
                             }
                             else
                             {
@@ -136,7 +142,9 @@ int main()
                             int index = searchPatient(patients, displayName);
                             if (index != -1)
                             {
+                                clear_terminal();
                                 displayPatient(&patients[index]);
+                                nextPage();
                             }
                             else
                             {
@@ -176,8 +184,10 @@ int main()
                             int index = searchDoctor(doctors, searchName);
                             if (index != -1)
                             {
+                                clear_terminal();
                                 printf("Doctor found:\n");
                                 displayDoctor(&doctors[index]);
+                                nextPage();
                             }
                             else
                             {
@@ -205,7 +215,9 @@ int main()
                             int index = searchDoctor(doctors, displayName);
                             if (index != -1)
                             {
+                                clear_terminal();
                                 displayDoctor(&doctors[index]);
+                                nextPage();
                             }
                             else
                             {
@@ -222,6 +234,7 @@ int main()
                 break;
             }
             case 3:
+                clear_terminal();
                 printf("Exiting the program.\n");
                 exit(0);
             default:
@@ -336,26 +349,6 @@ void deletePatient(patientInfo patients[MAX_PATIENTS], const char* name)
     }
 }
 
-void displayPatient(const patientInfo* patient)
-{
-    printf("\n%s╔═══════════════════════════════════╗%s\n", CYAN, RESET);
-    printf("%s║        Patient Information        ║%s\n", CYAN, RESET);
-    printf("%s╚═══════════════════════════════════╝%s\n", CYAN, RESET);
-    printf("%s╔═══════════════════════════════════╗%s\n", CYAN, RESET);
-    printf("%s║ Name: %-27s ║%s\n", CYAN, patient->patientName, RESET);
-    printf("%s║ Age: %-28d ║%s\n", CYAN, patient->age, RESET);
-    printf("%s║ Height: %-25.2f ║%s\n", CYAN, patient->height, RESET);
-    printf("%s║ Weight: %-25.2f ║%s\n", CYAN, patient->weight, RESET);
-    printf("%s║ Blood Type: %-22s║%s\n", CYAN, patient->bloodType, RESET);
-    printf("%s║ Contact Number: %-18s║%s\n", CYAN, patient->patientContact, RESET);
-    printf("%s║ Address: %-25s║%s\n", CYAN, patient->patientAddress, RESET);
-    printf("%s║ Emergency Contact: %-15s║%s\n", CYAN, patient->emergencyContact, RESET);
-    printf("%s║ Username: %-23s ║%s\n", CYAN, patient->patientUserName, RESET);
-    printf("%s║ Password: %-23s ║%s\n", CYAN, patient->patientPass, RESET);
-    printf("%s║ ID: %-29d ║%s\n", CYAN, patient->id, RESET);
-    printf("%s╚═══════════════════════════════════╝%s\n", CYAN, RESET);
-}
-
 void getDoctorInfo(doctorInfo *doctor)
 {
     printf("Input name: ");
@@ -445,59 +438,104 @@ void deleteDoctor(doctorInfo doctors[MAX_DOCTORS], const char* name)
     }
 }
 
-void displayDoctor(const doctorInfo* doctor)
+void displayPatient(const patientInfo* patient)
 {
-    printf("\n%s╔═══════════════════════════════════╗%s\n", GREEN, RESET);
-    printf("%s║        Doctor Information         ║%s\n", GREEN, RESET);
-    printf("%s╚═══════════════════════════════════╝%s\n", GREEN, RESET);
-    printf("%s╔═══════════════════════════════════╗%s\n", GREEN, RESET);
-    printf("%s║ Name: %-27s ║%s\n", GREEN, doctor->doctorName, RESET);
-    printf("%s║ Address: %-25s║%s\n", GREEN, doctor->doctorAddress, RESET);
-    printf("%s║ Specialty: %-23s║%s\n", GREEN, doctor->specialty, RESET);
-    printf("%s║ Experience: %-22d║%s\n", GREEN, doctor->experience, RESET);
-    printf("%s║ Contact Number: %-18s║%s\n", GREEN, doctor->doctorContact, RESET);
-    printf("%s║ Username: %-23s ║%s\n", GREEN, doctor->doctorUserName, RESET);
-    printf("%s║ Password: %-23s ║%s\n", GREEN, doctor->doctorPass, RESET);
-    printf("%s║ ID: %-29d ║%s\n", GREEN, doctor->id, RESET);
-    printf("%s╚═══════════════════════════════════╝%s\n", GREEN, RESET);
+    printf("\n          %s╔═══════════════════════════════════╗%s\n", CYAN, RESET);
+    printf("          %s║        Patient Information        ║%s\n", CYAN, RESET);
+    printf("          %s╚═══════════════════════════════════╝%s\n", CYAN, RESET);
+    printf("          %s╔═══════════════════════════════════╗%s\n", CYAN, RESET);
+    printf("          %s║ Name: %-27s ║%s\n", CYAN, patient->patientName, RESET);
+    printf("          %s║ Age: %-28d ║%s\n", CYAN, patient->age, RESET);
+    printf("          %s║ Height: %-25.2f ║%s\n", CYAN, patient->height, RESET);
+    printf("          %s║ Weight: %-25.2f ║%s\n", CYAN, patient->weight, RESET);
+    printf("          %s║ Blood Type: %-22s║%s\n", CYAN, patient->bloodType, RESET);
+    printf("          %s║ Contact Number: %-18s║%s\n", CYAN, patient->patientContact, RESET);
+    printf("          %s║ Address: %-25s║%s\n", CYAN, patient->patientAddress, RESET);
+    printf("          %s║ Emergency Contact: %-15s║%s\n", CYAN, patient->emergencyContact, RESET);
+    printf("          %s║ Username: %-23s ║%s\n", CYAN, patient->patientUserName, RESET);
+    printf("          %s║ Password: %-23s ║%s\n", CYAN, patient->patientPass, RESET);
+    printf("          %s║ ID: %-29d ║%s\n", CYAN, patient->id, RESET);
+    printf("          %s╚═══════════════════════════════════╝%s\n", CYAN, RESET);
 }
 
+
+void displayDoctor(const doctorInfo* doctor)
+{
+    printf("\n          %s╔═══════════════════════════════════╗%s\n", GREEN, RESET);
+    printf("          %s║        Doctor Information         ║%s\n", GREEN, RESET);
+    printf("          %s╚═══════════════════════════════════╝%s\n", GREEN, RESET);
+    printf("          %s╔═══════════════════════════════════╗%s\n", GREEN, RESET);
+    printf("          %s║ Name: %-27s ║%s\n", GREEN, doctor->doctorName, RESET);
+    printf("          %s║ Address: %-25s║%s\n", GREEN, doctor->doctorAddress, RESET);
+    printf("          %s║ Specialty: %-23s║%s\n", GREEN, doctor->specialty, RESET);
+    printf("          %s║ Experience: %-22d║%s\n", GREEN, doctor->experience, RESET);
+    printf("          %s║ Contact Number: %-18s║%s\n", GREEN, doctor->doctorContact, RESET);
+    printf("          %s║ Username: %-23s ║%s\n", GREEN, doctor->doctorUserName, RESET);
+    printf("          %s║ Password: %-23s ║%s\n", GREEN, doctor->doctorPass, RESET);
+    printf("          %s║ ID: %-29d ║%s\n", GREEN, doctor->id, RESET);
+    printf("          %s╚═══════════════════════════════════╝%s\n", GREEN, RESET);
+}
 void displayPatientMenu()
 {
-    printf("\n%s╔════════════════════════════════════════╗%s\n", YELLOW, RESET);
-    printf("%s║              Patient Panel             ║%s\n", YELLOW, RESET);
-    printf("%s╠════════════════════════════════════════╣%s\n", YELLOW, RESET);
-    printf("%s║ %s1.%s Add patients                        ║%s\n", YELLOW, BLUE, YELLOW, RESET);
-    printf("%s║ %s2.%s Search patient                      ║%s\n", YELLOW, BLUE, YELLOW, RESET);
-    printf("%s║ %s3.%s Delete patient                      ║%s\n", YELLOW, BLUE, YELLOW, RESET);
-    printf("%s║ %s4.%s Display patient information         ║%s\n", YELLOW, BLUE, YELLOW, RESET);
-    printf("%s║ %s5.%s Back to main menu                   ║%s\n", YELLOW, BLUE, YELLOW, RESET);
-    printf("%s╚════════════════════════════════════════╝%s\n", YELLOW, RESET);
+    printf("\n          %s╔════════════════════════════════════════╗%s\n", YELLOW, RESET);
+    printf("          %s║              Patient Panel             ║%s\n", YELLOW, RESET);
+    printf("          %s╠════════════════════════════════════════╣%s\n", YELLOW, RESET);
+    printf("          %s║ %s1.%s Add patients                        ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("          %s║ %s2.%s Search patient                      ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("          %s║ %s3.%s Delete patient                      ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("          %s║ %s4.%s Display patient information         ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("          %s║ %s5.%s Back to main menu                   ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("          %s╚════════════════════════════════════════╝%s\n", YELLOW, RESET);
+    printf("\n");
     printf("Enter your choice: ");
 }
 
 void displayDoctorMenu()
 {
-    printf("\n%s╔════════════════════════════════════════╗%s\n", MAGENTA, RESET);
-    printf("%s║              Doctor Panel              ║%s\n", MAGENTA, RESET);
-    printf("%s╠════════════════════════════════════════╣%s\n", MAGENTA, RESET);
-    printf("%s║ %s1.%s Add doctors                         ║%s\n", MAGENTA, BLUE, MAGENTA, RESET);
-    printf("%s║ %s2.%s Search doctor                       ║%s\n", MAGENTA, BLUE, MAGENTA, RESET);
-    printf("%s║ %s3.%s Delete doctor                       ║%s\n", MAGENTA, BLUE, MAGENTA, RESET);
-    printf("%s║ %s4.%s Display doctor information          ║%s\n", MAGENTA, BLUE, MAGENTA, RESET);
-    printf("%s║ %s5.%s Back to main menu                   ║%s\n", MAGENTA, BLUE, MAGENTA, RESET);
-    printf("%s╚════════════════════════════════════════╝%s\n", MAGENTA, RESET);
+    printf("\n          %s╔════════════════════════════════════════╗%s\n", MAGENTA, RESET);
+    printf("          %s║              Doctor Panel              ║%s\n", MAGENTA, RESET);
+    printf("          %s╠════════════════════════════════════════╣%s\n", MAGENTA, RESET);
+    printf("          %s║ %s1.%s Add doctors                         ║%s\n", MAGENTA, BLUE, MAGENTA, RESET);
+    printf("          %s║ %s2.%s Search doctor                       ║%s\n", MAGENTA, BLUE, MAGENTA, RESET);
+    printf("          %s║ %s3.%s Delete doctor                       ║%s\n", MAGENTA, BLUE, MAGENTA, RESET);
+    printf("          %s║ %s4.%s Display doctor information          ║%s\n", MAGENTA, BLUE, MAGENTA, RESET);
+    printf("          %s║ %s5.%s Back to main menu                   ║%s\n", MAGENTA, BLUE, MAGENTA, RESET);
+    printf("          %s╚════════════════════════════════════════╝%s\n", MAGENTA, RESET);
+    printf("\n");
     printf("Enter your choice: ");
 }
 
 void displayMainMenu()
 {
-    printf("\n%s╔════════════════════════════════════════╗%s\n", BLUE, RESET);
-    printf("%s║                 Main Menu              ║%s\n", BLUE, RESET);
-    printf("%s╠════════════════════════════════════════╣%s\n", BLUE, RESET);
-    printf("%s║ %s1.%s Patient Panel                       ║%s\n", BLUE, GREEN, BLUE, RESET);
-    printf("%s║ %s2.%s Doctor Panel                        ║%s\n", BLUE, GREEN, BLUE, RESET);
-    printf("%s║ %s3.%s Exit                                ║%s\n", BLUE, GREEN, BLUE, RESET);
-    printf("%s╚════════════════════════════════════════╝%s\n", BLUE, RESET);
+    printf("\n          %s╔════════════════════════════════════════╗%s\n", BLUE, RESET);
+    printf("          %s║                 Main Menu              ║%s\n", BLUE, RESET);
+    printf("          %s╠════════════════════════════════════════╣%s\n", BLUE, RESET);
+    printf("          %s║ %s1.%s Patient Panel                       ║%s\n", BLUE, GREEN, BLUE, RESET);
+    printf("          %s║ %s2.%s Doctor Panel                        ║%s\n", BLUE, GREEN, BLUE, RESET);
+    printf("          %s║ %s3.%s Exit                                ║%s\n", BLUE, GREEN, BLUE, RESET);
+    printf("          %s╚════════════════════════════════════════╝%s\n", BLUE, RESET);
+    printf("\n");
     printf("Enter your choice: ");
+}
+
+void clear_terminal()
+{
+    #ifdef _WIN32
+        system("cls");
+    #else
+        system("clear");
+    #endif
+}
+
+void nextPage()
+{
+  char choice;
+  printf("Go to previous panel (Y/N) ?");
+  scanf("%c", &choice);
+
+  while(1)
+    if((choice == 'Y') || (choice == 'y') || (choice == 'n') || (choice == 'N'))
+      break;
+
+  clear_terminal();
 }
