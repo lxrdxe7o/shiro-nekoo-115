@@ -71,34 +71,43 @@ void displayMainMenu();
 
 void nextPage();
 
-int main()
-{
+void savePatientsToFile(const patientInfo patients[MAX_PATIENTS], const char *filename);
+void loadPatientsFromFile(patientInfo patients[MAX_PATIENTS], const char *filename);
+
+void saveDoctorsToFile(const doctorInfo doctors[MAX_DOCTORS], const char *filename);
+void loadDoctorsFromFile(doctorInfo doctors[MAX_DOCTORS], const char *filename);
+
+int main() {
     static int lastAssignedPatientID = 0;
     static int lastAssignedDoctorID = 0;
+
     patientInfo patients[MAX_PATIENTS] = {0};
     doctorInfo doctors[MAX_DOCTORS] = {0};
-    int choice;
 
-    while (1)
-    {
+    loadPatientsFromFile(patients, "patients.dat");
+    loadDoctorsFromFile(doctors, "doctors.dat");
+
+    int choice;
+    while (1) {
+        clear_terminal();
         displayMainMenu();
         scanf("%d", &choice);
         getchar();
+        clear_terminal();
 
-        switch (choice)
-        {
-            case 1:
-            {
+        switch (choice) {
+            case 1: {
                 int patientChoice;
-                while (1)
-                {
+                while (1) {
+                    clear_terminal();
                     displayPatientMenu();
                     scanf("%d", &patientChoice);
                     getchar();
+                    clear_terminal();
 
-                    switch (patientChoice)
-                    {
+                    switch (patientChoice) {
                         case 1:
+                            clear_terminal();
                             getInfo_patient(patients, &lastAssignedPatientID);
                             break;
                         case 2:
@@ -109,15 +118,13 @@ int main()
                             strtok(searchName, "\n");
 
                             int index = searchPatient(patients, searchName);
-                            if (index != -1)
-                            {
+                            if (index != -1) {
                                 clear_terminal();
                                 printf("Patient found:\n");
                                 displayPatient(&patients[index]);
                                 nextPage();
-                            }
-                            else
-                            {
+                            } else {
+                                clear_terminal();
                                 printf("Patient not found.\n");
                             }
                             break;
@@ -129,6 +136,7 @@ int main()
                             fgets(deleteName, sizeof(deleteName), stdin);
                             strtok(deleteName, "\n");
 
+                            clear_terminal();
                             deletePatient(patients, deleteName);
                             break;
                         }
@@ -140,37 +148,37 @@ int main()
                             strtok(displayName, "\n");
 
                             int index = searchPatient(patients, displayName);
-                            if (index != -1)
-                            {
+                            if (index != -1) {
                                 clear_terminal();
                                 displayPatient(&patients[index]);
                                 nextPage();
-                            }
-                            else
-                            {
+                            } else {
+                                clear_terminal();
                                 printf("Patient not found.\n");
                             }
                             break;
                         }
                         case 5:
+                            clear_terminal();
                             goto mainMenu;
                         default:
+                            clear_terminal();
                             printf("Invalid choice. Please try again.\n");
+                            nextPage();
+                            break;
                     }
                 }
                 break;
             }
-            case 2:
-            {
+            case 2: {
                 int doctorChoice;
-                while (1)
-                {
+                while (1) {
+                    clear_terminal();
                     displayDoctorMenu();
                     scanf("%d", &doctorChoice);
                     getchar();
 
-                    switch (doctorChoice)
-                    {
+                    switch (doctorChoice) {
                         case 1:
                             getInfo_doctor(doctors, &lastAssignedDoctorID);
                             break;
@@ -182,15 +190,12 @@ int main()
                             strtok(searchName, "\n");
 
                             int index = searchDoctor(doctors, searchName);
-                            if (index != -1)
-                            {
+                            if (index != -1) {
                                 clear_terminal();
                                 printf("Doctor found:\n");
                                 displayDoctor(&doctors[index]);
                                 nextPage();
-                            }
-                            else
-                            {
+                            } else {
                                 printf("Doctor not found.\n");
                             }
                             break;
@@ -213,14 +218,11 @@ int main()
                             strtok(displayName, "\n");
 
                             int index = searchDoctor(doctors, displayName);
-                            if (index != -1)
-                            {
+                            if (index != -1) {
                                 clear_terminal();
                                 displayDoctor(&doctors[index]);
                                 nextPage();
-                            }
-                            else
-                            {
+                            } else {
                                 printf("Doctor not found.\n");
                             }
                             break;
@@ -234,18 +236,20 @@ int main()
                 break;
             }
             case 3:
+                // Save data to files
+                savePatientsToFile(patients, "patients.dat");
+                saveDoctorsToFile(doctors, "doctors.dat");
                 clear_terminal();
                 printf("Exiting the program.\n");
                 exit(0);
             default:
                 printf("Invalid choice. Please try again.\n");
+                mainMenu:;
         }
-        mainMenu:;
     }
 
     return 0;
 }
-
 
 void getPatientInfo(patientInfo *patient)
 {
@@ -440,41 +444,43 @@ void deleteDoctor(doctorInfo doctors[MAX_DOCTORS], const char* name)
 
 void displayPatient(const patientInfo* patient)
 {
-    printf("\n          %s╔═══════════════════════════════════╗%s\n", CYAN, RESET);
-    printf("          %s║        Patient Information        ║%s\n", CYAN, RESET);
-    printf("          %s╚═══════════════════════════════════╝%s\n", CYAN, RESET);
-    printf("          %s╔═══════════════════════════════════╗%s\n", CYAN, RESET);
-    printf("          %s║ Name: %-27s ║%s\n", CYAN, patient->patientName, RESET);
-    printf("          %s║ Age: %-28d ║%s\n", CYAN, patient->age, RESET);
-    printf("          %s║ Height: %-25.2f ║%s\n", CYAN, patient->height, RESET);
-    printf("          %s║ Weight: %-25.2f ║%s\n", CYAN, patient->weight, RESET);
-    printf("          %s║ Blood Type: %-22s║%s\n", CYAN, patient->bloodType, RESET);
-    printf("          %s║ Contact Number: %-18s║%s\n", CYAN, patient->patientContact, RESET);
-    printf("          %s║ Address: %-25s║%s\n", CYAN, patient->patientAddress, RESET);
-    printf("          %s║ Emergency Contact: %-15s║%s\n", CYAN, patient->emergencyContact, RESET);
-    printf("          %s║ Username: %-23s ║%s\n", CYAN, patient->patientUserName, RESET);
-    printf("          %s║ Password: %-23s ║%s\n", CYAN, patient->patientPass, RESET);
-    printf("          %s║ ID: %-29d ║%s\n", CYAN, patient->id, RESET);
-    printf("          %s╚═══════════════════════════════════╝%s\n", CYAN, RESET);
+    printf("\n          %s╔═════════════════════════════════════════════════════════════════╗%s\n", CYAN, RESET);
+    printf("          %s║                      Patient Information                        ║%s\n", CYAN, RESET);
+    printf("          %s╚═════════════════════════════════════════════════════════════════╝%s\n", CYAN, RESET);
+    printf("          %s╔═════════════════════════════════════════════════════════════════╗%s\n", CYAN, RESET);
+    printf("          %s║ Name: %-57s ║%s\n", CYAN, patient->patientName, RESET);
+    printf("          %s║ Age: %-58d ║%s\n", CYAN, patient->age, RESET);
+    printf("          %s║ Height: %-55.2f ║%s\n", CYAN, patient->height, RESET);
+    printf("          %s║ Weight: %-55.2f ║%s\n", CYAN, patient->weight, RESET);
+    printf("          %s║ Blood Type: %-52s║%s\n", CYAN, patient->bloodType, RESET);
+    printf("          %s║ Contact Number: %-48s║%s\n", CYAN, patient->patientContact, RESET);
+    printf("          %s║ Address: %-53s  ║%s\n", CYAN, patient->patientAddress, RESET);
+    printf("          %s║ Emergency Contact: %-43s  ║%s\n", CYAN, patient->emergencyContact, RESET);
+    printf("          %s║ Username: %-49s     ║%s\n", CYAN, patient->patientUserName, RESET);
+    printf("          %s║ Password: %-49s     ║%s\n", CYAN, patient->patientPass, RESET);
+    printf("          %s║ ID: %-57d   ║%s\n", CYAN, patient->id, RESET);
+    printf("          %s╚═════════════════════════════════════════════════════════════════╝%s\n", CYAN, RESET);
 }
+
 
 
 void displayDoctor(const doctorInfo* doctor)
 {
-    printf("\n          %s╔═══════════════════════════════════╗%s\n", GREEN, RESET);
-    printf("          %s║        Doctor Information         ║%s\n", GREEN, RESET);
-    printf("          %s╚═══════════════════════════════════╝%s\n", GREEN, RESET);
-    printf("          %s╔═══════════════════════════════════╗%s\n", GREEN, RESET);
-    printf("          %s║ Name: %-27s ║%s\n", GREEN, doctor->doctorName, RESET);
-    printf("          %s║ Address: %-25s║%s\n", GREEN, doctor->doctorAddress, RESET);
-    printf("          %s║ Specialty: %-23s║%s\n", GREEN, doctor->specialty, RESET);
-    printf("          %s║ Experience: %-22d║%s\n", GREEN, doctor->experience, RESET);
-    printf("          %s║ Contact Number: %-18s║%s\n", GREEN, doctor->doctorContact, RESET);
-    printf("          %s║ Username: %-23s ║%s\n", GREEN, doctor->doctorUserName, RESET);
-    printf("          %s║ Password: %-23s ║%s\n", GREEN, doctor->doctorPass, RESET);
-    printf("          %s║ ID: %-29d ║%s\n", GREEN, doctor->id, RESET);
-    printf("          %s╚═══════════════════════════════════╝%s\n", GREEN, RESET);
+    printf("\n          %s╔═════════════════════════════════════════════════════════════════╗%s\n", GREEN, RESET);
+    printf("          %s║                      Doctor Information                         ║%s\n", GREEN, RESET);
+    printf("          %s╚═════════════════════════════════════════════════════════════════╝%s\n", GREEN, RESET);
+    printf("          %s╔═════════════════════════════════════════════════════════════════╗%s\n", GREEN, RESET);
+    printf("          %s║ Name: %-57s ║%s\n", GREEN, doctor->doctorName, RESET);
+    printf("          %s║ Address: %-53s  ║%s\n", GREEN, doctor->doctorAddress, RESET);
+    printf("          %s║ Specialty: %-51s  ║%s\n", GREEN, doctor->specialty, RESET);
+    printf("          %s║ Experience: %-50d  ║%s\n", GREEN, doctor->experience, RESET);
+    printf("          %s║ Contact Number: %-46s  ║%s\n", GREEN, doctor->doctorContact, RESET);
+    printf("          %s║ Username: %-49s     ║%s\n", GREEN, doctor->doctorUserName, RESET);
+    printf("          %s║ Password: %-49s     ║%s\n", GREEN, doctor->doctorPass, RESET);
+    printf("          %s║ ID: %-57d   ║%s\n", GREEN, doctor->id, RESET);
+    printf("          %s╚═════════════════════════════════════════════════════════════════╝%s\n", GREEN, RESET);
 }
+
 void displayPatientMenu()
 {
     printf("\n          %s╔════════════════════════════════════════╗%s\n", YELLOW, RESET);
@@ -525,8 +531,8 @@ void clear_terminal()
     #else
         system("clear");
     #endif
-}
-
+} 
+ 
 void nextPage()
 {
   char choice;
@@ -538,4 +544,44 @@ void nextPage()
       break;
 
   clear_terminal();
+}
+
+void savePatientsToFile(const patientInfo patients[MAX_PATIENTS], const char *filename) {
+    FILE *file = fopen(filename, "wb");
+    if (file == NULL) {
+        perror("Error opening file for writing");
+        return;
+    }
+    fwrite(patients, sizeof(patientInfo), MAX_PATIENTS, file);
+    fclose(file);
+}
+
+void loadPatientsFromFile(patientInfo patients[MAX_PATIENTS], const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        perror("Error opening file for reading");
+        return;
+    }
+    fread(patients, sizeof(patientInfo), MAX_PATIENTS, file);
+    fclose(file);
+}
+
+void saveDoctorsToFile(const doctorInfo doctors[MAX_DOCTORS], const char *filename) {
+    FILE *file = fopen(filename, "wb");
+    if (file == NULL) {
+        perror("Error opening file for writing");
+        return;
+    }
+    fwrite(doctors, sizeof(doctorInfo), MAX_DOCTORS, file);
+    fclose(file);
+}
+
+void loadDoctorsFromFile(doctorInfo doctors[MAX_DOCTORS], const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        perror("Error opening file for reading");
+        return;
+    }
+    fread(doctors, sizeof(doctorInfo), MAX_DOCTORS, file);
+    fclose(file);
 }
