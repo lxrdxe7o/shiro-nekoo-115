@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #define MAX_NAME_LENGTH 50
 #define MAX_ADDRESS_LENGTH 200
@@ -13,6 +14,8 @@
 #define MAX_CONTACT_LENGTH 15
 #define DAYS_IN_WEEK 7
 #define SLOTS_PER_DAY 5
+#define APPOINTMENT_PER_SLOT 5
+#define MAX_WARDS 50
 
 #define RESET "\033[0m"
 #define RED "\033[31m"
@@ -22,6 +25,12 @@
 #define MAGENTA "\033[35m"
 #define CYAN "\033[36m"
 #define WHITE "\033[37m"
+
+typedef struct {
+    int wardID;
+    char patientName[MAX_NAME_LENGTH];
+    char doctorName[MAX_NAME_LENGTH];
+} medicalWard;
 
 typedef struct patientInfo
 {
@@ -49,7 +58,7 @@ typedef struct doctorInfo
     int experience;
     char doctorContact[MAX_CONTACT_LENGTH];
     char doctorUserName[MAX_USER_NAME];
-    int calendar[DAYS_IN_WEEK][SLOTS_PER_DAY];
+    int calendar[DAYS_IN_WEEK][SLOTS_PER_DAY][APPOINTMENT_PER_SLOT];
 } doctorInfo;
 
 void clear_terminal();
@@ -58,14 +67,20 @@ void getPatientInfo(patientInfo *patient);
 void getInfo_patient(patientInfo patients[MAX_PATIENTS], int *lastAssignedID);
 void patientAccountCreation(patientInfo *patient, int *lastAssignedID);
 int searchPatient(patientInfo patients[MAX_PATIENTS], const char* name);
-void deletePatient(patientInfo patients[MAX_PATIENTS], const char* name);
+void deletePatient(patientInfo patients[MAX_PATIENTS], const char* name, int *lastAssignedID);
 void displayPatient(const patientInfo* patient);
+void displayPatientSubMenu();
+int patientLogIn(const patientInfo *patients, int maxCount, const char *inputUser, const char *pass);
+void editPatientInfo(patientInfo *patient);
+void takeAppointment(doctorInfo *doctors, patientInfo *patients);
+void appointmentFinalization(doctorInfo doctors[MAX_DOCTORS], patientInfo patients[MAX_PATIENTS]);
+void displayPrescription(const patientInfo *patients);
 
 void getDoctorInfo(doctorInfo *doctor);
 void doctorAccountCreation(doctorInfo *doctor, int *lastAssignedID);
 void getInfo_doctor(doctorInfo doctors[MAX_DOCTORS], int *lastAssignedID);
 int searchDoctor(doctorInfo doctors[MAX_DOCTORS], const char* name);
-void deleteDoctor(doctorInfo doctors[MAX_DOCTORS], const char* name);
+void deleteDoctor(doctorInfo doctors[MAX_DOCTORS], const char* name, int *lastAssignedID);
 void displayDoctor(const doctorInfo* doctor);
 void initializeCalendar(doctorInfo *doctors);
 void displayCalendar(const doctorInfo *doctors);
@@ -74,6 +89,8 @@ int docLogIn(const doctorInfo *doctors, int maxCount, const char *inputUser, con
 void docLogInPanel();
 void displayDoctorSubMenu();
 void editDoctorInfo(doctorInfo *doctor);
+void prescribePatient(patientInfo *patients);
+
 
 void displayPatientMenu();
 void displayDoctorMenu();
@@ -90,36 +107,50 @@ void loadPatientsFromFile(patientInfo patients[MAX_PATIENTS], const char *filena
 void saveDoctorsToFile(const doctorInfo doctors[MAX_DOCTORS], const char *filename);
 void loadDoctorsFromFile(doctorInfo doctors[MAX_DOCTORS], const char *filename);
 
-void saveIDs(int patientID, int doctorID);
-void loadIDs(int *patientID, int *doctorID);
+void saveIDs(int patientID, int doctorID, int wardID);
+void loadIDs(int *patientID, int *doctorID, int *wardID);
 
+void deleteAll(patientInfo patients[MAX_PATIENTS], doctorInfo doctors[MAX_DOCTORS], int *lastAssignedPatientID, int *lastAssignedDoctorID, int *lastAssignedWardID);
+
+int searchWard(const medicalWard *wards, int maxCount, const char *patientName);
+void addWard(medicalWard *wards, int *lastAssignedWardID, const char *patientName, const char *doctorName);
+void deleteWard(medicalWard *wards, int *lastAssignedWardID, const char *patientName);
+void displayWard(const medicalWard *wards, int maxCount);
+void addPatientToWard(medicalWard *wards, int *lastAssignedWardID, patientInfo *patients, int maxCountPatients, doctorInfo *doctors, int maxCountDoctors);
+void displayWardMenu();
+void deletePatientFromWard(medicalWard *wards, int *lastAssignedWardID, patientInfo *patients, int maxCountPatients);
+
+void loadWardFromFile(medicalWard *wards, int *lastAssignedWardID, const char *filename);
+void saveWardToFile(const medicalWard *wards, int maxCount, const char *filename);
 int main() {
     static int lastAssignedPatientID = 0;
     static int lastAssignedDoctorID = 0;
+    static int lastAssignedWardID = 0;
 
-    loadIDs(&lastAssignedPatientID, &lastAssignedDoctorID);
+    loadIDs(&lastAssignedPatientID, &lastAssignedDoctorID, &lastAssignedWardID);
 
     patientInfo patients[MAX_PATIENTS] = {0};
     doctorInfo doctors[MAX_DOCTORS] = {0};
+    medicalWard wards[MAX_WARDS] = {0};
 
     loadPatientsFromFile(patients, "patients.dat");
     loadDoctorsFromFile(doctors, "doctors.dat");
+    loadWardFromFile(wards, &lastAssignedWardID ,"wards.dat");
 
     int choice;
     while (1) {
         clear_terminal();
         displayMainMenu();
-        scanf("%d", &choice);
-        getchar();
+        int choice = inputInt();
         clear_terminal();
 
         switch (choice) {
             case 1: {
                 int patientChoice;
                 while (1) {
+                    patientMenu:;
                     displayPatientMenu();
-                    scanf("%d", &patientChoice);
-                    getchar();
+                    patientChoice = inputInt();
                     clear_terminal();
 
                     switch (patientChoice) {
@@ -134,8 +165,7 @@ int main() {
                             char searchName[MAX_NAME_LENGTH];
                             printf("\n\n");
                             printf("Enter the name of the patient to search: ");
-                            fgets(searchName, sizeof(searchName), stdin);
-                            strtok(searchName, "\n");
+                            inputString(searchName, sizeof(searchName));
 
                             int index = searchPatient(patients, searchName);
                             if (index != -1) {
@@ -157,11 +187,10 @@ int main() {
                             char deleteName[MAX_NAME_LENGTH];
                             printf("\n\n");
                             printf("Enter the name of the patient to delete: ");
-                            fgets(deleteName, sizeof(deleteName), stdin);
-                            strtok(deleteName, "\n");
+                            inputString(deleteName, sizeof(deleteName));
 
                             clear_terminal();
-                            deletePatient(patients, deleteName);
+                            deletePatient(patients, deleteName, &lastAssignedPatientID);
                             break;
                         }
                         case 4:
@@ -171,8 +200,7 @@ int main() {
                             char displayName[MAX_NAME_LENGTH];
                             printf("\n\n");
                             printf("Enter the name of the patient to display: ");
-                            fgets(displayName, sizeof(displayName), stdin);
-                            strtok(displayName, "\n");
+                            inputString(displayName, sizeof(displayName));
 
                             int index = searchPatient(patients, displayName);
                             if (index != -1) {
@@ -187,6 +215,59 @@ int main() {
                             break;
                         }
                         case 5:
+                        {
+                            clear_terminal();
+                            
+                            char inputUser[MAX_USER_NAME];
+                            char pass[MAX_PASSWORD_LENGTH];
+
+                            printf("Enter Patient Username:");
+                            inputString(inputUser, MAX_USER_NAME);
+
+                            printf("Enter password:");
+                            inputString(pass, MAX_PASSWORD_LENGTH);
+
+                            int index = patientLogIn(patients, MAX_PATIENTS, inputUser, pass);
+                            if (index != -1) 
+                            {
+                                while (1)
+                                {
+                                    displayPatientSubMenu();
+                                    int subChoice;
+                                    subChoice = inputInt();
+                                    clear_terminal();
+
+                                    switch (subChoice)
+                                    {
+                                    case 1:
+                                        displayPatient(&patients[index]);
+                                        displayPrescription(&patients[index]);
+                                        break;
+                                    case 2:
+                                        editPatientInfo(&patients[index]);
+                                        break;
+                                    case 3:
+                                        appointmentFinalization(doctors, patients);
+                                        break;
+                                    case 4:
+                                        goto patientMenu;
+                                    default:
+                                        printf("Invalid choice. Please try again.\n");
+                                    }
+                                
+                                }
+                                clear_terminal();
+                                break;
+                            } 
+                            else 
+                            {
+                                clear_terminal();
+                                notFound('p');
+                                nextPage();
+                                break;
+                            }   
+                        }
+                        case 6:
                             clear_terminal();
                             goto mainMenu;
                         default:
@@ -203,8 +284,7 @@ int main() {
                 while (1) {
                     docMenu:;
                     displayDoctorMenu();
-                    scanf("%d", &doctorChoice);
-                    getchar();
+                    doctorChoice = inputInt();
 
                     switch (doctorChoice) {
                         case 1:
@@ -218,8 +298,7 @@ int main() {
                             char searchName[MAX_NAME_LENGTH];
                             printf("\n\n");
                             printf("Enter the name of the doctor to search: ");
-                            fgets(searchName, sizeof(searchName), stdin);
-                            strtok(searchName, "\n");
+                            inputString(searchName, sizeof(searchName));
 
                             int index = searchDoctor(doctors, searchName);
                             if (index != -1) {
@@ -239,10 +318,9 @@ int main() {
                             char deleteName[MAX_NAME_LENGTH];
                             printf("\n\n");
                             printf("Enter the name of the doctor to delete: ");
-                            fgets(deleteName, sizeof(deleteName), stdin);
-                            strtok(deleteName, "\n");
+                            inputString(deleteName, sizeof(deleteName));
 
-                            deleteDoctor(doctors, deleteName);
+                            deleteDoctor(doctors, deleteName, &lastAssignedDoctorID);
                             break;
                         }
                         case 4:
@@ -252,8 +330,7 @@ int main() {
                             char displayName[MAX_NAME_LENGTH];
                             printf("\n\n");
                             printf("Enter the name of the doctor to display: ");
-                            fgets(displayName, sizeof(displayName), stdin);
-                            strtok(displayName, "\n");
+                            inputString(displayName, sizeof(displayName));
 
                             int index = searchDoctor(doctors, displayName);
                             if (index != -1) {
@@ -273,14 +350,12 @@ int main() {
                             
                             char inputUser[MAX_USER_NAME];
                             char pass[MAX_PASSWORD_LENGTH];
-    
+
                             printf("Enter Doctor Username:");
-                            fgets(inputUser, MAX_USER_NAME, stdin);
-                            strtok(inputUser, "\n");
+                            inputString(inputUser, MAX_USER_NAME);
 
                             printf("Enter password:");
-                            fgets(pass, MAX_PASSWORD_LENGTH, stdin);
-                            strtok(pass, "\n");
+                            inputString(pass, MAX_PASSWORD_LENGTH);
 
                             int index = docLogIn(doctors, MAX_DOCTORS, inputUser, pass);
                             if (index != -1) 
@@ -289,8 +364,7 @@ int main() {
                                 {
                                     displayDoctorSubMenu();
                                     int subChoiceDoc;
-                                    scanf("%d", &subChoiceDoc);
-                                    getchar();
+                                    subChoiceDoc = inputInt();
                                     clear_terminal();
 
                                     switch (subChoiceDoc)
@@ -302,7 +376,8 @@ int main() {
                                         editDoctorInfo(&doctors[index]);
                                         break;
                                     case 3:
-                                        // Prescribe patient
+                                        prescribePatient(patients);                                        
+
                                         break;
                                     case 4:
                                         goto docMenu;
@@ -330,11 +405,76 @@ int main() {
                 }
                 break;
             }
+            case 420:
+                clear_terminal();
+                deleteAll(patients, doctors, &lastAssignedPatientID, &lastAssignedDoctorID, &lastAssignedWardID);
+                exit(0);
+                break;
             case 3:
+            {
+                int wardChoice;
+                while (1) {
+                    
+                    displayWardMenu();
+                    wardChoice = inputInt();
+
+                    switch (wardChoice) {
+                        case 1:
+                            clear_terminal();
+                            addPatientToWard(wards, &lastAssignedWardID, patients, MAX_PATIENTS, doctors, MAX_DOCTORS);
+                            break;
+                        case 2:
+                        {
+                            clear_terminal();
+                            displayWardMenu();
+                            char searchName[MAX_NAME_LENGTH];
+                            printf("\n\n");
+                            printf("Enter the name of the patient to search: ");
+                            inputString(searchName, sizeof(searchName));
+
+                            int index = searchWard(wards, MAX_WARDS, searchName);
+                            if (index != -1) {
+                                clear_terminal();
+                                printf("Patient found in ward:\n");
+                                displayWard(&wards[index], 1);
+                                nextPage();
+                            } else {
+                                printf("Patient not found in any ward.\n");
+                            }
+                            break;
+                        }
+                        case 3:
+                        {
+                            clear_terminal();
+                            displayWardMenu();
+
+                            deletePatientFromWard(wards, &lastAssignedWardID, patients, MAX_PATIENTS);
+                            break;
+                        }
+                        case 4:
+                        {
+                            clear_terminal();
+                            displayWardMenu();
+                            displayWard(wards, MAX_WARDS);
+                            nextPage();
+                            break;
+                        }
+                        case 5:
+                            goto mainMenu;
+                        default:
+                            printf("Invalid choice. Please try again.\n");
+                    }
+                }
+                break;
+            }
+
+            case 4:
                 // Save data to files
                 savePatientsToFile(patients, "patients.dat");
                 saveDoctorsToFile(doctors, "doctors.dat");
-                saveIDs(lastAssignedPatientID, lastAssignedDoctorID);
+                saveIDs(lastAssignedPatientID, lastAssignedDoctorID, lastAssignedWardID);
+                // save the ward data to a file
+                saveWardToFile(wards, MAX_WARDS, "wards.dat");
                 
                 clear_terminal();
                 printf("Exiting the program..\n");
@@ -351,60 +491,50 @@ int main() {
 void getPatientInfo(patientInfo *patient)
 {
     printf("Input name: ");
-    fgets(patient->patientName, sizeof(patient->patientName), stdin);
-    strtok(patient->patientName, "\n");
+    inputString(patient->patientName, sizeof(patient->patientName));
 
     printf("Input age: ");
-    scanf("%d", &patient->age);
-    getchar();
+    patient->age = inputInt();
 
     printf("Input height (in centimeters): ");
-    scanf("%f", &patient->height);
-    getchar();
+    patient->height = inputInt();
 
     printf("Input weight (in kilograms): ");
-    scanf("%f", &patient->weight);
-    getchar();
+    patient->weight = inputInt();
 
     printf("Input blood group: ");
-    fgets(patient->bloodType, sizeof(patient->bloodType), stdin);
-    strtok(patient->bloodType, "\n");
+    inputString(patient->bloodType, sizeof(patient->bloodType));
 
     printf("Input patient contact number: ");
-    fgets(patient->patientContact, sizeof(patient->patientContact), stdin);
-    strtok(patient->patientContact, "\n");
+    inputString(patient->patientContact, sizeof(patient->patientContact));
 
     printf("Input address: ");
-    fgets(patient->patientAddress, sizeof(patient->patientAddress), stdin);
-    strtok(patient->patientAddress, "\n");
+    inputString(patient->patientAddress, sizeof(patient->patientAddress));
 
     printf("Input emergency contact number: ");
-    fgets(patient->emergencyContact, sizeof(patient->emergencyContact), stdin);
-    strtok(patient->emergencyContact, "\n");
+    inputString(patient->emergencyContact, sizeof(patient->emergencyContact));
 }
 
 
 void patientAccountCreation(patientInfo *patient, int *lastAssignedID)
 {
+    printf("\n\n");
     patient->id = ++(*lastAssignedID);
 
     printf("Assigned unique ID: %d\n", patient->id);
 
     printf("Input patient username: ");
-    fgets(patient->patientUserName, sizeof(patient->patientUserName), stdin);
-    strtok(patient->patientUserName, "\n");
+    inputString(patient->patientUserName, sizeof(patient->patientUserName));
 
     printf("Input patient password: ");
-    fgets(patient->patientPass, sizeof(patient->patientPass), stdin);
-    strtok(patient->patientPass, "\n");
+    inputString(patient->patientPass, sizeof(patient->patientPass));
 }
 
 void getInfo_patient(patientInfo patients[MAX_PATIENTS], int *lastAssignedID)
 {
     int numPatients;
     printf("How many patients do you want to add (maximum %d)? ", MAX_PATIENTS);
-    scanf("%d", &numPatients);
-    getchar();
+    numPatients = inputInt();
 
     if ((*lastAssignedID) + numPatients > MAX_PATIENTS)
     {
@@ -432,7 +562,7 @@ int searchPatient(patientInfo patients[MAX_PATIENTS], const char* name)
     return -1;
 }
 
-void deletePatient(patientInfo patients[MAX_PATIENTS], const char* name)
+void deletePatient(patientInfo patients[MAX_PATIENTS], const char* name, int *lastAssignedID)
 {
     int index = searchPatient(patients, name);
     if (index != -1)
@@ -440,8 +570,10 @@ void deletePatient(patientInfo patients[MAX_PATIENTS], const char* name)
         for (int i = index; i < MAX_PATIENTS - 1; i++)
         {
             patients[i] = patients[i + 1];
+            patients[i].id = i + 1; // Update the patient ID
         }
         memset(&patients[MAX_PATIENTS - 1], 0, sizeof(patientInfo));
+        (*lastAssignedID)--;
         printf("Patient '%s' deleted successfully.\n", name);
     }
     else
@@ -453,24 +585,19 @@ void deletePatient(patientInfo patients[MAX_PATIENTS], const char* name)
 void getDoctorInfo(doctorInfo *doctor)
 {
     printf("Input name: ");
-    fgets(doctor->doctorName, sizeof(doctor->doctorName), stdin);
-    strtok(doctor->doctorName, "\n");
+    inputString(doctor->doctorName, sizeof(doctor->doctorName));
 
     printf("Input address: ");
-    fgets(doctor->doctorAddress, sizeof(doctor->doctorAddress), stdin);
-    strtok(doctor->doctorAddress, "\n");
+    inputString(doctor->doctorAddress, sizeof(doctor->doctorAddress));
 
     printf("Input specialty: ");
-    fgets(doctor->specialty, sizeof(doctor->specialty), stdin);
-    strtok(doctor->specialty, "\n");
+    inputString(doctor->specialty, sizeof(doctor->specialty));
 
     printf("Input years of experience: ");
-    scanf("%d", &doctor->experience);
-    getchar();
+    doctor->experience = inputInt();
 
     printf("Input contact number: ");
-    fgets(doctor->doctorContact, sizeof(doctor->doctorContact), stdin);
-    strtok(doctor->doctorContact, "\n");
+    inputString(doctor->doctorContact, sizeof(doctor->doctorContact));
 }
 
 void doctorAccountCreation(doctorInfo *doctor, int *lastAssignedID)
@@ -480,33 +607,30 @@ void doctorAccountCreation(doctorInfo *doctor, int *lastAssignedID)
     printf("Assigned unique ID: %d\n", doctor->id);
 
     printf("Input doctor username: ");
-    fgets(doctor->doctorUserName, sizeof(doctor->doctorUserName), stdin);
-    strtok(doctor->doctorUserName, "\n");
+    inputString(doctor->doctorUserName, sizeof(doctor->doctorUserName));
 
     printf("Input doctor password: ");
-    fgets(doctor->doctorPass, sizeof(doctor->doctorPass), stdin);
-    strtok(doctor->doctorPass, "\n");
+    inputString(doctor->doctorPass, sizeof(doctor->doctorPass));
 }
 
 void getInfo_doctor(doctorInfo doctors[MAX_DOCTORS], int *lastAssignedID)
 {
     int numDoctors;
     printf("How many doctors do you want to add (maximum %d)? ", MAX_DOCTORS);
-    scanf("%d", &numDoctors);
-    getchar();
+    numDoctors = inputInt();
 
-    if (numDoctors > MAX_DOCTORS)
+    if ((*lastAssignedID) + numDoctors > MAX_DOCTORS)
     {
-        printf("You can add a maximum of %d doctors.\n", MAX_DOCTORS);
-        numDoctors = MAX_DOCTORS;
+        printf("You can add a maximum of %d doctors.\n", MAX_DOCTORS - (*lastAssignedID));
+        numDoctors = MAX_DOCTORS - (*lastAssignedID);
     }
 
     for (int i = 0; i < numDoctors; i++)
     {
         printf("\nInput details for doctor %d:\n", i + 1);
-        getDoctorInfo(&doctors[i]);
-        doctorAccountCreation(&doctors[i], lastAssignedID);
-        initializeCalendar(&doctors[i]);
+        getDoctorInfo(&doctors[(*lastAssignedID) + i]);
+        doctorAccountCreation(&doctors[(*lastAssignedID) + i], lastAssignedID);
+        initializeCalendar(&doctors[(*lastAssignedID) + i]);
     }
 }
 
@@ -521,8 +645,7 @@ int searchDoctor(doctorInfo doctors[MAX_DOCTORS], const char* name)
     }
     return -1;
 }
-
-void deleteDoctor(doctorInfo doctors[MAX_DOCTORS], const char* name)
+void deleteDoctor(doctorInfo doctors[MAX_DOCTORS], const char* name, int *lastAssignedID)
 {
     int index = searchDoctor(doctors, name);
     if (index != -1)
@@ -530,8 +653,10 @@ void deleteDoctor(doctorInfo doctors[MAX_DOCTORS], const char* name)
         for (int i = index; i < MAX_DOCTORS - 1; i++)
         {
             doctors[i] = doctors[i + 1];
+            doctors[i].id = i + 1; // Update the doctor's ID
         }
         memset(&doctors[MAX_DOCTORS - 1], 0, sizeof(doctorInfo));
+        (*lastAssignedID)--;
         printf("Doctor '%s' deleted successfully.\n", name);
     }
     else
@@ -588,7 +713,8 @@ void displayPatientMenu()
     printf("                    %s║ %s2.%s Search patient                      ║%s\n", YELLOW, BLUE, YELLOW, RESET);
     printf("                    %s║ %s3.%s Delete patient                      ║%s\n", YELLOW, BLUE, YELLOW, RESET);
     printf("                    %s║ %s4.%s Display patient information         ║%s\n", YELLOW, BLUE, YELLOW, RESET);
-    printf("                    %s║ %s5.%s Back to main menu                   ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("                    %s║ %s5.%s Patient login                       ║%s\n", YELLOW, BLUE, YELLOW, RESET);   
+    printf("                    %s║ %s6.%s Back to main menu                   ║%s\n", YELLOW, BLUE, YELLOW, RESET);
     printf("                    %s╚════════════════════════════════════════╝%s\n", YELLOW, RESET);
     printf("\n");
     printf("Enter your choice: ");
@@ -617,8 +743,24 @@ void displayMainMenu()
     printf("                    %s╠════════════════════════════════════════╣%s\n", BLUE, RESET);
     printf("                    %s║ %s1.%s Patient Panel                       ║%s\n", BLUE, GREEN, BLUE, RESET);
     printf("                    %s║ %s2.%s Doctor Panel                        ║%s\n", BLUE, GREEN, BLUE, RESET);
-    printf("                    %s║ %s3.%s Exit                                ║%s\n", BLUE, GREEN, BLUE, RESET);
+    printf("                    %s║ %s3.%s Medical Ward Panel                  ║%s\n", BLUE, GREEN, BLUE, RESET);
+    printf("                    %s║ %s4.%s Exit                                ║%s\n", BLUE, GREEN, BLUE, RESET);
     printf("                    %s╚════════════════════════════════════════╝%s\n", BLUE, RESET);
+    printf("\n");
+    printf("Enter your choice: ");
+}
+
+void displayWardMenu()
+{
+    printf("\n                    %s╔════════════════════════════════════════╗%s\n", YELLOW, RESET);
+    printf("                    %s║              Medical Ward Panel        ║%s\n", YELLOW, RESET);
+    printf("                    %s╠════════════════════════════════════════╣%s\n", YELLOW, RESET);
+    printf("                    %s║ %s1.%s Add ward                            ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("                    %s║ %s2.%s Search ward                         ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("                    %s║ %s3.%s Delete ward                         ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("                    %s║ %s4.%s Display ward information            ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("                    %s║ %s5.%s Back to main menu                   ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("                    %s╚════════════════════════════════════════╝%s\n", YELLOW, RESET);
     printf("\n");
     printf("Enter your choice: ");
 }
@@ -634,14 +776,24 @@ void clear_terminal()
  
 void nextPage()
 {
-  char choice;
-  printf("Go to previous panel (Y/N) ?");
-  scanf("%c", &choice);
+  char choice[10];
+  next:;
+  printf("Go to previous panel (yes/no) ?: ");
+  inputString(choice, sizeof(choice));
 
   while(1)
-    if((choice == 'Y') || (choice == 'y') || (choice == 'n') || (choice == 'N'))
-      break;
-
+    if(strcasecmp(choice, "yes") == 0)
+        break;
+    else
+    {
+        printf("Do you want to exit the program (yes/no) ?: ");
+        inputString(choice, sizeof(choice));
+        
+        if(strcasecmp(choice, "yes") == 0)
+            exit(0);
+        else
+            goto next;
+    }
   clear_terminal();
 }
 
@@ -689,7 +841,9 @@ void loadDoctorsFromFile(doctorInfo doctors[MAX_DOCTORS], const char *filename) 
 void initializeCalendar(doctorInfo *doctors) {
     for (int i = 0; i < DAYS_IN_WEEK; i++) {
         for (int j = 0; j < SLOTS_PER_DAY; j++) {
-            doctors->calendar[i][j] = 0; // All slots are initially unavailable
+            for (int k = 0; k < APPOINTMENT_PER_SLOT; k++) {
+                doctors->calendar[i][j][k] = 0;
+            }
         }
     }
 }
@@ -703,20 +857,24 @@ void displayCalendar(const doctorInfo *doctors) {
     for (int i = 0; i < DAYS_IN_WEEK; i++) {
         printf("%-9s: ", daysOfWeek[i]);
         for (int j = 0; j < SLOTS_PER_DAY; j++) {
-            printf("%-12s", doctors->calendar[i][j] ? "[Available]" : "[Unavailable]");
+            int count = 0;
+            for (int k = 0; k < APPOINTMENT_PER_SLOT; k++) {
+                if (doctors->calendar[i][j][k] == 1) {
+                    count++;
+                }
+            }
+            printf("%-12s (%d appointments)", doctors->calendar[i][j] ? "[Available]" : "[Unavailable]", count);
         }
         printf("\n");
     }
-    printf("══════════════════════════════════════════════════════════════════════════════\n");
 }
-
 
 void updateCalendar(doctorInfo *doctors) {
     int day, slot;
     printf("Enter the day you want to update (0 for Monday, 1 for Tuesday, ..., 6 for Sunday): ");
-    scanf("%d", &day);
+    day = inputInt();
     printf("Enter the slot you want to update (0 to 4): ");
-    scanf("%d", &slot);
+    slot = inputInt();
 
     if (day < 0 || day >= DAYS_IN_WEEK || slot < 0 || slot >= SLOTS_PER_DAY) {
         printf("Invalid day or slot. Please try again.\n");
@@ -725,18 +883,78 @@ void updateCalendar(doctorInfo *doctors) {
 
     printf("Enter 1 for available or 0 for unavailable: ");
     int status;
-    scanf("%d", &status);
+    status = inputInt();
     
     if (status != 0 && status != 1) {
         printf("Invalid status. Please try again.\n");
         return;
     }
 
-    doctors->calendar[day][slot] = status;
+    for (int i = 0; i < APPOINTMENT_PER_SLOT; i++) {
+        doctors->calendar[day][slot][i] = status;
+    }
     printf("Calendar updated successfully.\n");
     printf("Updated schedule:\n");
     displayCalendar(doctors);
 }
+
+void appointmentFinalization(doctorInfo doctors[MAX_DOCTORS], patientInfo patients[MAX_PATIENTS])
+{
+    char patientName[MAX_NAME_LENGTH];
+    printf("Enter the name of the patient: ");
+    inputString(patientName, sizeof(patientName));
+
+    int patientIndex = searchPatient(patients, patientName);
+    if (patientIndex == -1) {
+        printf("Patient not found.\n");
+        return;
+    }
+
+    char doctorName[MAX_NAME_LENGTH];
+    printf("Enter the name of the doctor: ");
+    inputString(doctorName, sizeof(doctorName));
+
+    int doctorIndex = searchDoctor(doctors, doctorName);
+    if (doctorIndex == -1) {
+        printf("Doctor not found.\n");
+        return;
+    }
+
+    takeAppointment(&doctors[doctorIndex], &patients[patientIndex]);
+}
+
+//make a function so that the patient can take appointments from the doctor according to the doctor's schedule
+void takeAppointment(doctorInfo *doctors, patientInfo *patients)
+{
+    int day, slot;
+    printf("Enter the day you want to take appointment (0 for Monday, 1 for Tuesday, ..., 6 for Sunday): ");
+    day = inputInt();
+    printf("Enter the slot you want to take appointment (0 to 4): ");
+    slot = inputInt();
+
+    if (day < 0 || day >= DAYS_IN_WEEK || slot < 0 || slot >= SLOTS_PER_DAY) {
+        printf("Invalid day or slot. Please try again.\n");
+        return;
+    }
+
+    if (doctors->calendar[day][slot] == 0) {
+        printf("Doctor is unavailable at this time. Please choose another slot.\n");
+        return;
+    }
+
+    // Check if the slot is available
+    for (int i = 0; i < APPOINTMENT_PER_SLOT; i++) {
+        if (doctors->calendar[day][slot][i] == 1) {
+            doctors->calendar[day][slot][i] = 0;
+            printf("Appointment taken successfully.\n");
+            return;
+        }
+    }
+
+    printf("No more appointments available for this slot. Please choose another slot.\n");
+}
+
+
 
 void notFound(char k)
 {
@@ -779,6 +997,31 @@ int docLogIn(const doctorInfo *doctors, int maxCount, const char *inputUser, con
     return -1;
 }
 
+int patientLogIn(const patientInfo *patients, int maxCount, const char *inputUser, const char *pass)
+{
+    for (int i = 0; i < maxCount; i++)
+    {
+        if (patients[i].id != -1 && strcmp(patients[i].patientUserName, inputUser) == 0 && strcmp(patients[i].patientPass, pass) == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void displayPatientSubMenu() {
+    printf("\n                    %s╔════════════════════════════════════════╗%s\n", YELLOW, RESET);
+    printf("                    %s║           Patient Sub-Panel            ║%s\n", YELLOW, RESET);
+    printf("                    %s╠════════════════════════════════════════╣%s\n", YELLOW, RESET);
+    printf("                    %s║ %s1.%s Check patient info                  ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("                    %s║ %s2.%s Edit patient info                   ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("                    %s║ %s3.%s Take doctor's appointment           ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("                    %s║ %s4.%s Back to patient menu                ║%s\n", YELLOW, BLUE, YELLOW, RESET);
+    printf("                    %s╚════════════════════════════════════════╝%s\n", YELLOW, RESET);
+    printf("\n");
+    printf("Enter your choice: ");
+}
+
 void displayDoctorSubMenu() {
     printf("\n                    %s╔════════════════════════════════════════╗%s\n", YELLOW, RESET);
     printf("                    %s║           Doctor Sub-Panel             ║%s\n", YELLOW, RESET);
@@ -790,6 +1033,51 @@ void displayDoctorSubMenu() {
     printf("                    %s╚════════════════════════════════════════╝%s\n", YELLOW, RESET);
     printf("\n");
     printf("Enter your choice: ");
+}
+
+//make a function that takes input and updates the patient prescription
+void prescribePatient(patientInfo *patients)
+{
+    char patientName[MAX_NAME_LENGTH];
+    printf("Enter the name of the patient: ");
+    inputString(patientName, MAX_NAME_LENGTH);
+
+    printf("=========================================\n");
+
+    int patientIndex = searchPatient(patients, patientName);
+    if (patientIndex == -1) {
+        notFound('p');
+        return;
+    }
+
+    char prescription[MAX_DOCTOR_REMARK];
+    printf("Enter the prescription for the patient: ");
+    printf("=========================================");
+    printf("\n");
+    inputString(prescription, MAX_DOCTOR_REMARK);
+
+    strcpy(patients[patientIndex].prescription, prescription);
+    printf("Prescription updated successfully.\n");
+}
+
+void editPatientInfo(patientInfo *patient) {
+    printf("Enter new name: ");
+    inputString(patient->patientName, MAX_NAME_LENGTH);
+
+    printf("Enter new address: ");
+    inputString(patient->patientAddress, MAX_ADDRESS_LENGTH);
+
+    printf("Enter new contact: ");
+    inputString(patient->patientContact, MAX_CONTACT_LENGTH);
+
+    printf("Enter new username: ");
+    inputString(patient->patientUserName, MAX_USER_NAME);
+
+    printf("Enter new password: ");
+    inputString(patient->patientPass, MAX_PASSWORD_LENGTH);
+
+    printf("Enter new age: ");
+    patient->age = inputInt();
 }
 
 void editDoctorInfo(doctorInfo *doctor) {
@@ -815,45 +1103,202 @@ void editDoctorInfo(doctorInfo *doctor) {
     doctor->experience = inputInt();
 }
 
-void inputString(char* buffer, int length) {
+void inputString(char* buffer, int length) 
+{
     fgets(buffer, length, stdin);
 
-    // Remove trailing newline character, if there is one
-    if ((strlen(buffer) > 0) && (buffer[strlen (buffer) - 1] == '\n')) {
+    if ((strlen(buffer) > 0) && (buffer[strlen (buffer) - 1] == '\n')) 
+    {
         buffer[strlen (buffer) - 1] = '\0';
     }
 }
 
-int inputInt() {
+int inputInt() 
+{
     int value;
     scanf("%d", &value);
 
-    // Clear the input buffer
     while(getchar() != '\n');
 
     return value;
 }
 
 // Function to save IDs to a file
-void saveIDs(int patientID, int doctorID) {
+void saveIDs(int patientID, int doctorID, int wardID) {
     FILE *file = fopen("ids.txt", "w");
     if (file == NULL) {
         printf("Error opening file!\n");
         return;
     }
 
-    fprintf(file, "%d\n%d", patientID, doctorID);
+    fprintf(file, "%d\n%d\n%d", patientID, doctorID, wardID);
     fclose(file);
 }
 
 // Function to load IDs from a file
-void loadIDs(int *patientID, int *doctorID) {
+void loadIDs(int *patientID, int *doctorID, int *wardID) {
     FILE *file = fopen("ids.txt", "r");
     if (file == NULL) {
         printf("Error opening file!\n");
         return;
     }
 
-    fscanf(file, "%d\n%d", patientID, doctorID);
+    fscanf(file, "%d\n%d\n%d", patientID, doctorID, wardID);
     fclose(file);
+}
+
+//function that deletes all patients and doctors
+void deleteAll(patientInfo patients[MAX_PATIENTS], doctorInfo doctors[MAX_DOCTORS], int *lastAssignedPatientID, int *lastAssignedDoctorID, int *lastAssignedWardID)
+{
+    for (int i = 0; i < MAX_PATIENTS; i++)
+    {
+        memset(&patients[i], 0, sizeof(patientInfo));
+    }
+    for (int i = 0; i < MAX_DOCTORS; i++)
+    {
+        memset(&doctors[i], 0, sizeof(doctorInfo));
+    }
+    *lastAssignedPatientID = 0;
+    *lastAssignedDoctorID = 0;
+    
+        printf("          %s╔═════════════════════════════════════════════════════════════════╗%s\n", RED, RESET);
+        printf("          %s║                                                                 ║%s\n", RED, RESET);
+        printf("          %s║                                                                 ║%s\n", RED, RESET);
+        printf("          %s║                                                                 ║%s\n", RED, RESET);
+        printf("          %s║                      Congratulations!!!                         ║%s\n", RED, RESET);
+        printf("          %s║                  You just NUKED the system!!!                   ║%s\n", RED, RESET);
+        printf("          %s║                                                                 ║%s\n", RED, RESET);
+        printf("          %s║                                                                 ║%s\n", RED, RESET);
+        printf("          %s║                                                                 ║%s\n", RED, RESET);
+        printf("          %s╚═════════════════════════════════════════════════════════════════╝%s\n", RED, RESET);
+    
+
+    //make sure to save the changes
+    savePatientsToFile(patients, "patients.dat");
+    saveDoctorsToFile(doctors, "doctors.dat");
+    saveIDs(*lastAssignedPatientID, *lastAssignedDoctorID, *lastAssignedWardID);
+}
+
+//make a function that displays the patient's prescription
+void displayPrescription(const patientInfo *patient)
+{
+    printf("══════════════════════════════════════════════════════════════════════════════\n");
+    printf(" Patient %s's Prescription:                                     \n", patient->patientName);
+    printf("══════════════════════════════════════════════════════════════════════════════\n");
+
+    printf("Prescription: %s\n", patient->prescription);
+    printf("============================================\n");
+
+}
+
+int searchWard(const medicalWard *wards, int maxCount, const char *patientName) {
+    for (int i = 0; i < maxCount; i++) {
+        if (strcasecmp(wards[i].patientName, patientName) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void addWard(medicalWard *wards, int *lastAssignedWardID, const char *patientName, const char *doctorName) {
+    wards[*lastAssignedWardID].wardID = *lastAssignedWardID + 1; // wardID starts from 1
+    strncpy(wards[*lastAssignedWardID].patientName, patientName, MAX_NAME_LENGTH);
+    strncpy(wards[*lastAssignedWardID].doctorName, doctorName, MAX_NAME_LENGTH);
+    (*lastAssignedWardID)++;
+}
+
+void deleteWard(medicalWard *wards, int *lastAssignedWardID, const char *patientName) {
+    int index = searchWard(wards, *lastAssignedWardID, patientName);
+    if (index != -1) {
+        for (int i = index; i < *lastAssignedWardID; i++) {
+            wards[i] = wards[i + 1];
+            wards[i].wardID = i + 1; // update wardID after shifting
+        }
+        (*lastAssignedWardID)--;
+    }
+}
+
+void displayWard(const medicalWard *wards, int maxCount) {
+    printf("Ward Information:\n");
+    for (int i = 0; i < maxCount; i++) {
+        printf("============================================\n");
+        printf("Ward ID: %d\n", wards[i].wardID);
+        printf("Patient Name: %s\n", wards[i].patientName);
+        printf("Doctor Name: %s\n", wards[i].doctorName);
+        printf("============================================\n");
+    }
+}
+
+//make a function that checks if the patient name and ward is valid by using the searchPatient and searchDoctor function and then adds the patient and doctor to the ward
+void addPatientToWard(medicalWard *wards, int *lastAssignedWardID, patientInfo *patients, int maxCountPatients, doctorInfo *doctors, int maxCountDoctors)
+{
+    char patientName[MAX_NAME_LENGTH];
+    printf("Enter the name of the patient: ");
+    inputString(patientName, MAX_NAME_LENGTH);
+
+    int patientIndex = searchPatient(patients, patientName);
+    if (patientIndex == -1) {
+        notFound('p');
+        return;
+    }
+
+    char doctorName[MAX_NAME_LENGTH];
+    printf("Enter the name of the doctor: ");
+    inputString(doctorName, MAX_NAME_LENGTH);
+
+    int doctorIndex = searchDoctor(doctors, doctorName);
+    if (doctorIndex == -1) {
+        notFound('d');
+        return;
+    }
+
+    addWard(wards, lastAssignedWardID, patientName, doctorName);
+    printf("Patient added to ward successfully.\n");
+}
+
+//similar to addPatientToWard but deletes the patient from the ward
+void deletePatientFromWard(medicalWard *wards, int *lastAssignedWardID, patientInfo *patients, int maxCountPatients)
+{
+    char patientName[MAX_NAME_LENGTH];
+    printf("\n");
+    printf("Enter the name of the patient: ");
+    inputString(patientName, MAX_NAME_LENGTH);
+
+    int patientIndex = searchPatient(patients, patientName);
+    if (patientIndex == -1) {
+        notFound('p');
+        return;
+    }
+
+    deleteWard(wards, lastAssignedWardID, patientName);
+    printf("Patient removed from ward successfully.\n");
+}
+
+//make save and load file functions for the medical ward similar to the patient and doctor functions
+void saveWardToFile(const medicalWard *wards, int maxCount, const char *filename) {
+    FILE *file = fopen(filename, "wb");
+    if (file == NULL) {
+        perror("Error opening file for writing");
+        return;
+    }
+    fwrite(wards, sizeof(medicalWard), maxCount, file);
+    fclose(file);
+}
+
+void loadWardFromFile(medicalWard *wards, int *lastAssignedWardID, const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        perror("Error opening file for reading");
+        return;
+    }
+    fread(wards, sizeof(medicalWard), MAX_WARDS, file);
+    fclose(file);
+
+    // Find the last assigned ward ID
+    for (int i = 0; i < MAX_WARDS; i++) {
+        if (wards[i].wardID == 0) {
+            *lastAssignedWardID = i;
+            break;
+        }
+    }
 }
