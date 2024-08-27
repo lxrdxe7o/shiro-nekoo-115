@@ -1,6 +1,6 @@
 /*
 *
-* This a simple Hospital Managemnt System written in C.
+* This a simple Hospital Management System written in C.
 *
 */
 
