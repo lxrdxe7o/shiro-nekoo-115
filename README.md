@@ -1,3 +1,3 @@
 # shiro-nekoo
 
-Code repo while learning C. Also that Spring 24 project.
+A simple CLI program written in C that resembles a Hospital Management System.
