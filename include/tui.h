@@ -43,7 +43,8 @@ typedef enum {
 typedef enum {
     ART_MAIN,
     ART_PATIENT,
-    ART_DOCTOR
+    ART_DOCTOR,
+    ART_WARD
 } TuiArtType;
 
 void tui_set_theme(TuiTheme theme);

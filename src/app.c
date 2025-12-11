@@ -143,6 +143,11 @@ static void doctor_panel(void* data) {
 
 static void ward_panel(void* data) {
     (void)data;
+    tui_set_theme(THEME_GRUVBOX); // Use Gruvbox for Wards too
+    tui_clear_screen();
+    tui_set_background_title("Ward Management");
+    tui_draw_logo(ART_WARD);
+    
     MenuItem items[] = {
         {"Create New Ward", 1, create_ward, NULL},
         {"List Wards & Occupancy", 2, list_wards, NULL},

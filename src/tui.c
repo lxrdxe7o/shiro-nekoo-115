@@ -19,38 +19,43 @@ void tui_init(void) {
     keypad(stdscr, TRUE);
     curs_set(0); // Hide cursor
     start_color();
+    use_default_colors();
     
     // Define palette (Gruvbox Dark approximation)
-    // NORMAL: White text on Black background
-    init_pair(COLOR_PAIR_NORMAL, COLOR_WHITE, COLOR_BLACK);
+    // NORMAL: White text on Default background
+    init_pair(COLOR_PAIR_NORMAL, COLOR_WHITE, -1);
     
-    // HEADER: Black text on Yellow background (Gruvbox Yellow/Orange accent)
-    init_pair(COLOR_PAIR_HEADER, COLOR_BLACK, COLOR_YELLOW);
+    // HEADER: Accent text on Default background
+    init_pair(COLOR_PAIR_HEADER, COLOR_YELLOW, -1);
     
-    // MENU ITEM: White text on Black background
-    init_pair(COLOR_PAIR_MENU_ITEM, COLOR_WHITE, COLOR_BLACK);
+    // MENU ITEM: White text on Default background
+    init_pair(COLOR_PAIR_MENU_ITEM, COLOR_WHITE, -1);
     
-    // SELECTED: Black text on Yellow background
+    // SELECTED: Black text on Accent background (Keep solid)
     init_pair(COLOR_PAIR_MENU_SELECTED, COLOR_BLACK, COLOR_YELLOW);
     
     // STATUS/MESSAGES
-    init_pair(COLOR_PAIR_SUCCESS, COLOR_GREEN, COLOR_BLACK);
-    init_pair(COLOR_PAIR_ERROR, COLOR_RED, COLOR_BLACK);
-    init_pair(COLOR_PAIR_WARNING, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(COLOR_PAIR_SUCCESS, COLOR_GREEN, -1);
+    init_pair(COLOR_PAIR_ERROR, COLOR_RED, -1);
+    init_pair(COLOR_PAIR_WARNING, COLOR_YELLOW, -1);
     
-    // INPUT: Yellow text on Black background (or standard White on Black)
-    init_pair(COLOR_PAIR_INPUT, COLOR_YELLOW, COLOR_BLACK);
+    // INPUT: Black text on Accent background (Solid block)
+    init_pair(COLOR_PAIR_INPUT, COLOR_BLACK, COLOR_YELLOW);
     
-    // BORDER: White (or Gray) on Black
-    init_pair(COLOR_PAIR_BORDER, COLOR_WHITE, COLOR_BLACK);
+    // BORDER: White (or Gray) on Default
+    init_pair(COLOR_PAIR_BORDER, COLOR_WHITE, -1);
     
-    init_pair(COLOR_PAIR_DISABLED, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(COLOR_PAIR_DISABLED, COLOR_MAGENTA, -1);
     
-    // Shadow color (Dimmed/Black)
-    // ncurses doesn't support true alpha, so we just use plain black 
-    // or maybe Blue on Black to simulate separate layer? 
-    // Stick to Black on Black for "gap" look or simple distinction.
-    init_pair(20, COLOR_BLACK, COLOR_BLACK); 
+    // Shadow color (Black on Default?)
+    // Using -1 on -1 makes it invisible if terminal bg is same.
+    // Let's keep shadow as actual COLOR_BLACK block if bg is -1?
+    // Or make shadow -1, -1 for "transparent"? 
+    // User wants "pitch black" - implies the grey block they saw should be black.
+    // If we use COLOR_BLACK, -1 it might be just text?
+    // Let's make Shadow defined as just empty space with default bg?
+    // Actually, simply remove shadow color pair usage or set to -1,-1
+    init_pair(20, -1, -1); 
     
     bkgd(COLOR_PAIR(COLOR_PAIR_NORMAL));
     refresh();
@@ -80,9 +85,13 @@ void tui_set_theme(TuiTheme theme) {
     }
     
     // Redefine pairs based on accent
-    init_pair(COLOR_PAIR_HEADER, COLOR_BLACK, accent_color);
+    init_pair(COLOR_PAIR_HEADER, accent_color, -1);
+    
+    // SELECTED: Black text on Accent background (SOLID)
     init_pair(COLOR_PAIR_MENU_SELECTED, COLOR_BLACK, accent_color);
-    init_pair(COLOR_PAIR_INPUT, accent_color, COLOR_BLACK);
+    
+    // INPUT: Black text on Accent background (SOLID)
+    init_pair(COLOR_PAIR_INPUT, COLOR_BLACK, accent_color);
     
     // Refresh to apply changes immediately
     refresh();
@@ -93,32 +102,41 @@ void tui_draw_logo(TuiArtType type) {
     attron(COLOR_PAIR(COLOR_PAIR_HEADER) | A_BOLD);
 
     if (type == ART_MAIN) {
-        int x = (COLS - 60) / 2;
+        int x = (COLS - 64) / 2;
         if (x < 0) x = 0;
-        mvprintw(y++, x, "  _    _  ____   _____  _____  _____ _______       _      ");
-        mvprintw(y++, x, " | |  | |/ __ \\ / ____||  __ \\|_   _|__   __|/\\   | |     ");
-        mvprintw(y++, x, " | |__| | |  | | (___  | |__) | | |    | |  /  \\  | |     ");
-        mvprintw(y++, x, " |  __  | |  | |\\___ \\ |  ___/  | |    | | / /\\ \\ | |     ");
-        mvprintw(y++, x, " | |  | | |__| |____) || |     _| |_   | |/ ____ \\| |____ ");
-        mvprintw(y++, x, " |_|  |_|\\____/|_____/ |_|    |_____|  |_/_/    \\_\\______|");
+        mvprintw(y++, x, " ██╗  ██╗ ██████╗ ███████╗██████╗ ██╗████████╗ █████╗ ██╗     ");
+        mvprintw(y++, x, " ██║  ██║██╔═══██╗██╔════╝██╔══██╗██║╚══██╔══╝██╔══██╗██║     ");
+        mvprintw(y++, x, " ███████║██║   ██║███████╗██████╔╝██║   ██║   ███████║██║     ");
+        mvprintw(y++, x, " ██╔══██║██║   ██║╚════██║██╔═══╝ ██║   ██║   ██╔══██║██║     ");
+        mvprintw(y++, x, " ██║  ██║╚██████╔╝███████║██║     ██║   ██║   ██║  ██║███████╗");
+        mvprintw(y++, x, " ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝     ╚═╝   ╚═╝   ╚═╝  ╚═╝╚══════╝");
     } else if (type == ART_PATIENT) {
         int x = (COLS - 60) / 2; // Approx width
         if (x < 0) x = 0;
-        mvprintw(y++, x, "  _____       _______ _____ ______ _   _ _______  _____ ");
-        mvprintw(y++, x, " |  __ \\   /\\|__   __|_   _|  ____| \\ | |__   __|/ ____|");
-        mvprintw(y++, x, " | |__) | /  \\  | |    | | | |__  |  \\| |  | |  | (___  ");
-        mvprintw(y++, x, " |  ___/ / /\\ \\ | |    | | |  __| | . ` |  | |   \\___ \\ ");
-        mvprintw(y++, x, " | |    / ____ \\| |   _| |_| |____| |\\  |  | |   ____) |");
-        mvprintw(y++, x, " |_|   /_/    \\_\\_|  |_____|______|_| \\_|  |_|  |_____/ ");
+        mvprintw(y++, x, " ██████╗  █████╗ ████████╗██╗███████╗███╗   ██╗████████╗███████╗");
+        mvprintw(y++, x, " ██╔══██╗██╔══██╗╚══██╔══╝██║██╔════╝████╗  ██║╚══██╔══╝██╔════╝");
+        mvprintw(y++, x, " ██████╔╝███████║   ██║   ██║█████╗  ██╔██╗ ██║   ██║   ███████╗");
+        mvprintw(y++, x, " ██╔═══╝ ██╔══██║   ██║   ██║██╔══╝  ██║╚██╗██║   ██║   ╚════██║");
+        mvprintw(y++, x, " ██║     ██║  ██║   ██║   ██║███████╗██║ ╚████║   ██║   ███████║");
+        mvprintw(y++, x, " ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝");
     } else if (type == ART_DOCTOR) {
-        int x = (COLS - 55) / 2;
+        int x = (COLS - 56) / 2;
         if (x < 0) x = 0;
-        mvprintw(y++, x, "  _____   ____   _____ _______ ____  _____   _____ ");
-        mvprintw(y++, x, " |  __ \\ / __ \\ / ____|__   __/ __ \\|  __ \\ / ____|");
-        mvprintw(y++, x, " | |  | | |  | | |       | | | |  | | |__) | (___  ");
-        mvprintw(y++, x, " | |  | | |  | | |       | | | |  | |  _  / \\___ \\ ");
-        mvprintw(y++, x, " | |__| | |__| | |____   | | | |__| | | \\ \\ ____) |");
-        mvprintw(y++, x, " |_____/ \\____/ \\_____|  |_|  \\____/|_|  \\_\\_____/ ");
+        mvprintw(y++, x, " ██████╗  ██████╗  ██████╗████████╗ ██████╗ ██████╗ ███████╗");
+        mvprintw(y++, x, " ██╔══██╗██╔═══██╗██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗██╔════╝");
+        mvprintw(y++, x, " ██║  ██║██║   ██║██║        ██║   ██║   ██║██████╔╝███████╗");
+        mvprintw(y++, x, " ██║  ██║██║   ██║██║        ██║   ██║   ██║██╔══██╗╚════██║");
+        mvprintw(y++, x, " ██████╔╝╚██████╔╝╚██████╗   ██║   ╚██████╔╝██║  ██║███████║");
+        mvprintw(y++, x, " ╚═════╝  ╚═════╝  ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝");
+    } else if (type == ART_WARD) {
+        int x = (COLS - 40) / 2;
+        if (x < 0) x = 0;
+        mvprintw(y++, x, " ██╗    ██╗ █████╗ ██████╗ ██████╗ ");
+        mvprintw(y++, x, " ██║    ██║██╔══██╗██╔══██╗██╔══██╗");
+        mvprintw(y++, x, " ██║ █╗ ██║███████║██████╔╝██║  ██║");
+        mvprintw(y++, x, " ██║███╗██║██╔══██║██╔══██╗██║  ██║");
+        mvprintw(y++, x, " ╚███╔███╔╝██║  ██║██║  ██║██████╔╝");
+        mvprintw(y++, x, "  ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ");
     }
 
     attroff(COLOR_PAIR(COLOR_PAIR_HEADER) | A_BOLD);
@@ -186,8 +204,28 @@ void tui_window_draw_box(TuiWindow* win, TuiColor border_color) {
         wnoutrefresh(win->shadow);
     }
 
+    // Draw Double Border Manually
     wattron(win->win, COLOR_PAIR(border_color) | A_BOLD);
-    box(win->win, 0, 0);
+    
+    int w = win->width;
+    int h = win->height;
+
+    // Corners
+    mvwprintw(win->win, 0, 0, "╔");
+    mvwprintw(win->win, 0, w - 1, "╗");
+    mvwprintw(win->win, h - 1, 0, "╚");
+    mvwprintw(win->win, h - 1, w - 1, "╝");
+
+    // Sides
+    for (int i = 1; i < w - 1; i++) {
+        mvwprintw(win->win, 0, i, "═");
+        mvwprintw(win->win, h - 1, i, "═");
+    }
+    for (int i = 1; i < h - 1; i++) {
+        mvwprintw(win->win, i, 0, "║");
+        mvwprintw(win->win, i, w - 1, "║");
+    }
+
     wattroff(win->win, COLOR_PAIR(border_color) | A_BOLD);
     
     if (win->title) {
