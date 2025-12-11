@@ -46,7 +46,7 @@ The system follows a strict **Layered Architecture** to separate concerns betwee
 
 ```mermaid
 graph TD
-    user((User)) --> TUI[Presentation Layer<br/>(TUI Framework)]
+    user((User)) --> TUI["Presentation Layer<br/>(TUI Framework)"]
 
     subgraph "Application Core"
         TUI --> App[App Controller]
