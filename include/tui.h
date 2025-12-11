@@ -37,7 +37,8 @@ void tui_set_background_title(const char* title);
 typedef enum {
     THEME_GRUVBOX,
     THEME_MONOKAI,
-    THEME_BAMBOO
+    THEME_BAMBOO,
+    THEME_CORAL
 } TuiTheme;
 
 typedef enum {

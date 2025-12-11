@@ -82,6 +82,7 @@ void tui_set_theme(TuiTheme theme) {
         case THEME_GRUVBOX: accent_color = COLOR_YELLOW; break;
         case THEME_MONOKAI: accent_color = COLOR_MAGENTA; break;
         case THEME_BAMBOO:  accent_color = COLOR_GREEN; break;
+        case THEME_CORAL:   accent_color = COLOR_RED; break;
     }
     
     // Redefine pairs based on accent

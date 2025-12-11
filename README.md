@@ -1,11 +1,18 @@
 # 🏥 Hospital Management System (HMS)
 
-![Language](https://img.shields.io/badge/language-C11-blue.svg?style=for-the-badge&logo=c)
-![Platform](https://img.shields.io/badge/platform-Linux%20|%20Windows-lightgrey.svg?style=for-the-badge&logo=linux)
-![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)
-![UI](https://img.shields.io/badge/UI-ncurses-purple.svg?style=for-the-badge)
+![HMS Banner](assets/hms_banner.png)
 
-> **High-Performance, Modular C Application for Healthcare Management**
+A high-performance, modular C application for hospital management, featuring a professional ncurses-based TUI (Text User Interface) with custom memory management, data persistence, and distinct visual themes.
+
+## Gallery
+
+|             Main Menu              |           Patient Services           |
+| :--------------------------------: | :----------------------------------: |
+| ![Main Menu](assets/tui_main.png)  | ![Patients](assets/tui_patients.png) |
+|         **Doctor Portal**          |         **Ward Management**          |
+| ![Doctors](assets/tui_doctors.png) |     ![Ward](assets/tui_ward.png)     |
+
+## Features
 
 A professional-grade, terminal-based system engineered for efficiency and reliability. Capable of managing complex patient, doctor, and ward data with persistent binary storage and a responsive localized interface.
 
