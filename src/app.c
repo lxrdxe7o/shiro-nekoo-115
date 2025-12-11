@@ -61,8 +61,11 @@ void app_init(void) {
 }
 
 void app_run(void) {
+    tui_set_background_title("Hospital Management System");
     while (app.running) {
         main_menu();
+        // Redraw background in case it got clobbered
+        tui_set_background_title("Hospital Management System");
     }
 }
 
@@ -77,6 +80,11 @@ void app_shutdown(void) {
 // -----------------------------------------------------------------------------
 
 static void main_menu(void) {
+    tui_set_theme(THEME_GRUVBOX);
+    tui_clear_screen();
+    tui_set_background_title("Hospital Management System");
+    tui_draw_logo(ART_MAIN);
+    
     MenuItem items[] = {
         {"Patient Services", 1, patient_panel, NULL},
         {"Doctor Portal", 2, doctor_panel, NULL},
@@ -84,7 +92,7 @@ static void main_menu(void) {
         {"Exit System", 4, NULL, NULL}
     };
     
-    Menu* m = menu_create("Hospital Management System", items, 4);
+    Menu* m = menu_create("  Main Menu  ", items, 4);
     int choice = menu_run(m);
     menu_destroy(m);
     
@@ -97,6 +105,11 @@ static void main_menu(void) {
 
 static void patient_panel(void* data) {
     (void)data;
+    tui_set_theme(THEME_MONOKAI);
+    tui_clear_screen(); // Clear to remove previous logo
+    tui_set_background_title("Patient Services");
+    tui_draw_logo(ART_PATIENT);
+    
     MenuItem items[] = {
         {"Register New Patient", 1, register_patient, NULL},
         {"Login", 2, patient_login, NULL},
@@ -111,6 +124,11 @@ static void patient_panel(void* data) {
 
 static void doctor_panel(void* data) {
     (void)data;
+    tui_set_theme(THEME_BAMBOO);
+    tui_clear_screen(); // Clear to remove previous logo
+    tui_set_background_title("Doctor Portal");
+    tui_draw_logo(ART_DOCTOR);
+    
     MenuItem items[] = {
         {"Register New Doctor", 1, register_doctor, NULL},
         {"Login", 2, doctor_login, NULL},

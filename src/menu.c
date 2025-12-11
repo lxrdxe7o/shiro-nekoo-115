@@ -67,10 +67,12 @@ int menu_run(Menu* m) {
     while ((ch = wgetch(m->win->win)) != KEY_ESC) {
         switch (ch) {
             case KEY_UP:
+            case 'k':
                 if (m->selected > 0) m->selected--;
                 else m->selected = m->item_count - 1;
                 break;
             case KEY_DOWN:
+            case 'j':
                 if (m->selected < m->item_count - 1) m->selected++;
                 else m->selected = 0;
                 break;

@@ -21,6 +21,7 @@ typedef enum {
 // Window abstraction
 typedef struct {
     WINDOW* win;
+    WINDOW* shadow;
     int x, y, width, height;
     char* title;
 } TuiWindow;
@@ -30,6 +31,23 @@ void tui_init(void);
 void tui_shutdown(void);
 void tui_refresh_all(void);
 void tui_clear_screen(void);
+void tui_set_background_title(const char* title);
+
+// Themes
+typedef enum {
+    THEME_GRUVBOX,
+    THEME_MONOKAI,
+    THEME_BAMBOO
+} TuiTheme;
+
+typedef enum {
+    ART_MAIN,
+    ART_PATIENT,
+    ART_DOCTOR
+} TuiArtType;
+
+void tui_set_theme(TuiTheme theme);
+void tui_draw_logo(TuiArtType type);
 
 // Window Management
 TuiWindow* tui_window_create(int h, int w, int y, int x, const char* title);

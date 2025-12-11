@@ -50,7 +50,7 @@ static void draw_form(Form* f) {
         
         // Draw input box
         wattron(f->win->win, COLOR_PAIR(COLOR_PAIR_INPUT));
-        mvwhline(f->win->win, y + 1, 2, '_', 40);
+        mvwhline(f->win->win, y + 1, 2, ' ', 40);
         
         // Draw current value
         char display_buf[128] = {0};
@@ -67,14 +67,14 @@ static void draw_form(Form* f) {
                 }
                 break;
             case FIELD_INTEGER:
-                snprintf(display_buf, 40, "%d", *(int*)val);
+                if (*(int*)val != 0) snprintf(display_buf, 40, "%d", *(int*)val);
                 break;
             case FIELD_FLOAT:
-                snprintf(display_buf, 40, "%.2f", *(float*)val);
+                if (*(float*)val != 0.0f) snprintf(display_buf, 40, "%.2f", *(float*)val);
                 break;
         }
         
-        mvwprintw(f->win->win, y + 1, 2, "%s", display_buf);
+        mvwprintw(f->win->win, y + 1, 2, "%-40s", display_buf); // Left align, pad
         wattroff(f->win->win, COLOR_PAIR(COLOR_PAIR_INPUT));
         
         if (i == f->current_field) {
@@ -102,9 +102,9 @@ static void edit_field(Form* f) {
     if (field->type == FIELD_TEXT && field->value) {
         strncpy(buf, (char*)field->value, sizeof(buf)-1);
     } else if (field->type == FIELD_INTEGER) {
-        snprintf(buf, sizeof(buf), "%d", *(int*)field->value);
+        if (*(int*)field->value != 0) snprintf(buf, sizeof(buf), "%d", *(int*)field->value);
     } else if (field->type == FIELD_FLOAT) {
-        snprintf(buf, sizeof(buf), "%.2f", *(float*)field->value);
+        if (*(float*)field->value != 0.0f) snprintf(buf, sizeof(buf), "%.2f", *(float*)field->value);
     }
     
     tui_read_line(f->win->win, y, x, buf, 
@@ -134,10 +134,12 @@ bool form_run(Form* f) {
     while ((ch = wgetch(f->win->win)) != KEY_ESC) {
         switch (ch) {
             case KEY_UP:
+            case 'k':
                 if (f->current_field > 0) f->current_field--;
                 else f->current_field = f->field_count - 1;
                 break;
             case KEY_DOWN:
+            case 'j':
                 if (f->current_field < f->field_count - 1) f->current_field++;
                 else f->current_field = 0;
                 break;

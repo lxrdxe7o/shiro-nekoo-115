@@ -103,6 +103,7 @@ void* table_run(Table* t) {
     while ((ch = wgetch(t->win->win)) != KEY_ESC) {
         switch (ch) {
             case KEY_UP:
+            case 'k':
                 if (t->selected_row > 0) {
                     t->selected_row--;
                     if (t->selected_row < t->scroll_offset) {
@@ -111,6 +112,7 @@ void* table_run(Table* t) {
                 }
                 break;
             case KEY_DOWN:
+            case 'j':
                 if (t->selected_row < count - 1) {
                     t->selected_row++;
                     if (t->selected_row >= t->scroll_offset + visible_rows) {
