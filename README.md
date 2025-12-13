@@ -1,6 +1,6 @@
 # 🏥 Hospital Management System (HMS)
 
-![HMS Banner](assets/hms_banner.png)
+![HMS Banner](assets/header.svg)
 
 A high-performance, modular C application for hospital management, featuring a professional ncurses-based TUI (Text User Interface) with custom memory management, data persistence, and distinct visual themes.
 
