@@ -145,3 +145,5 @@ We recommend **Windows Subsystem for Linux (WSL)** for the native POSIX experien
 ## 📜 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+![Footer](assets/footer.svg)
