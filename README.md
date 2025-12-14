@@ -74,7 +74,7 @@ graph TD
         Memory --> LibC[Standard LibC]
     end
 
-    classDef layer fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef layer fill:#000,stroke:#fff,stroke-width:2px,color:#fff;
     class TUI,App,Logic layer;
 ```
 
