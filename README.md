@@ -112,8 +112,8 @@ We recommend **Windows Subsystem for Linux (WSL)** for the native POSIX experien
 1.  **Clone & Build**
 
     ```bash
-    git clone https://github.com/yourusername/hms-c.git
-    cd hms-c
+    git clone https://github.com/lxrdxe7o/shiro-nekoo-115.git
+    cd shiro-nekoo-115
     make
     ```
 
