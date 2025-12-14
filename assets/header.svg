@@ -4,7 +4,7 @@
       <style>
         .container {
           font-family: 'Courier New', monospace;
-          width: 800px;
+          width: 100%;
           height: 200px;
           background-color: #0d0d0d;
           position: relative;
