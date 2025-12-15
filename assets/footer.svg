@@ -1,68 +1,36 @@
-<svg fill="none" viewBox="0 0 800 80" width="100%" xmlns="http://www.w3.org/2000/svg">
-  <foreignObject width="100%" height="100%">
-    <div xmlns="http://www.w3.org/1999/xhtml">
-      <style>
-        .footer {
-          font-family: 'Courier New', monospace;
-          width: 100%;
-          height: 80px;
-          background-color: #0d0d0d;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #888;
-          font-size: 14px;
-          border: 1px solid #333;
-          border-radius: 6px;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .heart {
-          display: inline-block;
-          animation: heartbeat 1.5s ease-in-out infinite;
-          margin: 0 5px;
-          font-size: 18px;
-        }
-
-        @keyframes heartbeat {
-          0% { transform: scale(1); }
-          14% { transform: scale(1.3); }
-          28% { transform: scale(1); }
-          42% { transform: scale(1.3); }
-          70% { transform: scale(1); }
-        }
-
-        .author {
-          font-weight: bold;
-          background: linear-gradient(90deg, #FFFF00, #ff69b4, #00ff00, #9d8cff);
-          background-size: 300% 300%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-          animation: rainbow 5s ease infinite;
-          text-decoration: none;
-        }
-
-        @keyframes rainbow { 
-          0%{background-position:0% 50%}
-          50%{background-position:100% 50%}
-          100%{background-position:0% 50%}
-        }
-        
-        .username {
-          opacity: 0.6;
-          font-size: 12px;
-          margin-left: 8px;
-        }
-      </style>
-      <div class="footer">
-        <span>made with </span>
-        <span class="heart">💖</span>
-        <span> by </span>
-        <span class="author" style="margin-left: 5px;">xero</span>
-        <span class="username">(github: lxrdxe7o)</span>
-      </div>
-    </div>
-  </foreignObject>
+<svg viewBox="0 0 800 60" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="footerBg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0d0d0d"/>
+      <stop offset="50%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0d0d0d"/>
+    </linearGradient>
+    
+    <!-- Rainbow gradient for author name -->
+    <linearGradient id="rainbow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFFF00"/>
+      <stop offset="33%" style="stop-color:#ff69b4"/>
+      <stop offset="66%" style="stop-color:#00ff00"/>
+      <stop offset="100%" style="stop-color:#9d8cff"/>
+      <animate attributeName="x1" values="0%;100%;0%" dur="5s" repeatCount="indefinite"/>
+      <animate attributeName="x2" values="100%;200%;100%" dur="5s" repeatCount="indefinite"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#footerBg)" rx="6"/>
+  <rect width="100%" height="100%" fill="none" stroke="#333" stroke-width="1" rx="6"/>
+  
+  <!-- Footer text -->
+  <text x="400" y="38" text-anchor="middle" font-family="monospace" font-size="14">
+    <tspan fill="#888">made with </tspan>
+    <tspan fill="#ff69b4" font-size="16">
+      ❤
+      <animate attributeName="font-size" values="16;20;16" dur="1.5s" repeatCount="indefinite"/>
+    </tspan>
+    <tspan fill="#888"> by </tspan>
+    <tspan fill="url(#rainbow)" font-weight="bold">xero</tspan>
+    <tspan fill="#666" font-size="12"> (github: lxrdxe7o)</tspan>
+  </text>
 </svg>
