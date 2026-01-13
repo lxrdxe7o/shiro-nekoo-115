@@ -2,7 +2,7 @@
 
 # 🏥 Hospital Management System (HMS)
 
-A high-performance, modular C application for hospital management, featuring a professional ncurses-based TUI (Text User Interface) with custom memory management, data persistence, and distinct visual themes.
+A modular C application for hospital management, featuring a ncurses-based TUI (Text User Interface) with custom memory management, data persistence, and distinct visual themes.
 
 ## Gallery
 
@@ -14,7 +14,7 @@ A high-performance, modular C application for hospital management, featuring a p
 
 ## Features
 
-A professional-grade, terminal-based system engineered for efficiency and reliability. Capable of managing complex patient, doctor, and ward data with persistent binary storage and a responsive localized interface.
+A terminal-based system engineered for efficiency and reliability. Capable of managing complex patient, doctor, and ward data with persistent binary storage and a responsive localized interface.
 
 ---
 
